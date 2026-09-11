@@ -72,8 +72,7 @@ if ONEFILE:
         debug=False,
         bootloader_ignore_signals=False,
         strip=False,
-        upx=True,
-        upx_exclude=[],
+        upx=False,   # 关闭 UPX：压缩后容易被杀毒软件误报
         runtime_tmpdir=None,
         console=False,
         disable_windowed_traceback=False,
@@ -93,7 +92,7 @@ else:
         debug=False,
         bootloader_ignore_signals=False,
         strip=False,
-        upx=True,
+        upx=False,   # 关闭 UPX：压缩后容易被杀毒软件误报
         console=False,
         disable_windowed_traceback=False,
         argv_emulation=False,
@@ -108,7 +107,6 @@ else:
         a.zipfiles,
         a.datas,
         strip=False,
-        upx=True,
-        upx_exclude=[],
+        upx=False,   # 关闭 UPX：压缩后容易被杀毒软件误报
         name="ComfyUI_TagSelect",
     )

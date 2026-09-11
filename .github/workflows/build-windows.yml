@@ -1,0 +1,105 @@
+name: Build Windows exe
+
+# 在 GitHub 自己的 Windows 机器上打包单文件 exe，并作为 Release 附件发布。
+# 触发方式：
+#   1. push 到 main          -> 按 cts/__init__.py 里的版本号发布到 vX.Y
+#   2. push 形如 v1.2 的标签 -> 发布到该标签
+#   3. Actions 页面手动 Run  -> 同上（按版本号）
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: 打包 ComfyUI_TagSelect.exe
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 检查标签数据是否齐全
+        shell: bash
+        run: |
+          set -e
+          for f in assets/data/tags_core.json assets/data/tags_full.tsv.gz assets/data/presets.json; do
+            if [ ! -f "$f" ]; then echo "::error::缺少数据文件 $f"; exit 1; fi
+            echo "OK  $f  $(du -h "$f" | cut -f1)"
+          done
+
+      - name: 源码自测（离屏，53 项断言）
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python tools/selftest.py
+
+      - name: 打包 exe
+        run: python -m PyInstaller ComfyUI_TagSelect.spec --noconfirm --clean
+
+      - name: 冒烟测试打包产物
+        run: python tools/smoke_test.py dist/ComfyUI_TagSelect.exe
+
+      - name: 生成校验和
+        shell: bash
+        run: |
+          cd dist
+          sha256sum ComfyUI_TagSelect.exe > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: 解析发布标签
+        id: tag
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            V=$(python -c "import re,pathlib;print(re.search(r'__version__\s*=\s*[\"']([^\"']+)[\"']', pathlib.Path('cts/__init__.py').read_text(encoding='utf-8')).group(1))")
+            TAG="v${V}"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "本次发布到: ${TAG}"
+
+      - name: 上传到 Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          TAG="${{ steps.tag.outputs.tag }}"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG 不存在，先创建"
+            gh release create "$TAG" --title "$TAG" --notes "自动构建：ComfyUI_TagSelect $TAG"
+          fi
+          gh release upload "$TAG" dist/ComfyUI_TagSelect.exe dist/SHA256SUMS.txt --clobber
+          echo "已上传："
+          gh release view "$TAG" --json assets --jq '.assets[] | "  \(.name)  \(.size) B"'
+
+      - name: 同时保留一份 workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ComfyUI_TagSelect-windows-exe
+          path: |
+            dist/ComfyUI_TagSelect.exe
+            dist/SHA256SUMS.txt
+          retention-days: 30
+          if-no-files-found: error

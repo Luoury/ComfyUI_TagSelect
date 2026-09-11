@@ -1,16 +1,26 @@
 # ComfyUI_TagSelect
 
 ![version](https://img.shields.io/badge/version-v0.10-39C5BB)
+![build](https://github.com/Luoury/ComfyUI_TagSelect/actions/workflows/build-windows.yml/badge.svg)
 ![python](https://img.shields.io/badge/python-3.9%2B-2E8BFF)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
-> 简约的 AI 生图 Tag 选择器 · 初音未来主题 · 可打包成 Windows 单文件 exe
+> 简约的 AI 生图 Tag 选择器 · 初音未来主题 · Windows 单文件 exe
 
 把 AI 绘画常用的 tag 分门别类摆好，**点一下加入上方选择框，再点一下移出**，
 最后按「**复制全部**」直接粘进 ComfyUI / NovelAI / Stable Diffusion WebUI / Illustrious / Pony。
 
 支持 **中文搜英文**：输入「长发」就能找到 `long_hair`。
+
+## ⬇️ 下载
+
+**[→ 到 Releases 页面下载 `ComfyUI_TagSelect.exe`](https://github.com/Luoury/ComfyUI_TagSelect/releases/latest)**
+
+双击即可运行，**不需要安装 Python**，约 40~60 MB。同目录的 `SHA256SUMS.txt` 可用于校验下载完整性。
+
+> exe 由 GitHub Actions 在 `windows-latest` 上自动构建
+> （[工作流](.github/workflows/build-windows.yml)），每次推送到 `main` 或打版本标签都会重新打包并上传。
 
 ![标签库](docs/screenshot-tags.png)
 
@@ -24,8 +34,10 @@
 ## 目录
 
 - [功能一览](#功能一览)
+- [下载](#-下载)
 - [快速开始](#快速开始)
 - [打包成 exe](#打包成-exe)
+- [自动构建](#自动构建)
 - [界面说明](#界面说明)
 - [快捷键](#快捷键)
 - [自定义标签与预设](#自定义标签与预设)
@@ -63,7 +75,10 @@
 
 ### 方式一：直接用 exe（推荐给普通用户）
 
-到 `dist/` 目录双击 **`ComfyUI_TagSelect.exe`** 即可，不需要安装 Python。
+到 **[Releases 页面](https://github.com/Luoury/ComfyUI_TagSelect/releases/latest)** 下载
+`ComfyUI_TagSelect.exe`，双击即可，不需要安装 Python。
+
+（如果你是自己从源码打包的，产物在 `dist\ComfyUI_TagSelect.exe`。）
 
 ### 方式二：从源码运行
 
@@ -112,7 +127,34 @@ Linux / macOS：
 
 想改成「文件夹模式」（启动更快，避免每次解压）：
 
-打开 `ComfyUI_TagSelect.spec`，把第 12 行改成 `ONEFILE = False`，重新执行打包命令即可。
+打开 `ComfyUI_TagSelect.spec`，把 `ONEFILE` 改成 `False`，重新执行打包命令即可。
+
+---
+
+## 自动构建
+
+没有 Windows 机器也能出 exe —— 仓库带了一条 GitHub Actions 工作流
+[`.github/workflows/build-windows.yml`](.github/workflows/build-windows.yml)，
+在 GitHub 自己的 `windows-latest` 上完成打包并作为 Release 附件发布。
+
+触发方式：
+
+| 操作 | 结果 |
+| --- | --- |
+| push 到 `main` | 按 `cts/__init__.py` 里的 `__version__` 发布到 `vX.Y` |
+| push 形如 `v1.2` 的标签 | 发布到该标签 |
+| Actions 页面手动 **Run workflow** | 同第一条 |
+
+每次构建会依次执行：
+
+1. 检查 `assets/data/` 三个数据文件是否齐全
+2. 跑 `tools/selftest.py`（离屏，53 项断言）
+3. `pyinstaller ComfyUI_TagSelect.spec` 打包单文件 exe
+4. 跑 `tools/smoke_test.py` —— 启动 exe 等 14 秒，确认不是秒退
+5. 生成 `SHA256SUMS.txt`，把 exe 与校验和上传到对应 Release
+6. 同时留一份 workflow artifact（保留 30 天）
+
+> 关闭了 UPX 压缩：压缩后的 PyInstaller 产物经常被杀毒软件误报，不值得。
 
 ---
 
@@ -284,7 +326,9 @@ ComfyUI_TagSelect/
 ├── tools/
 │   ├── build_data.py           # 标签数据生成流水线
 │   ├── selftest.py             # 离屏功能自测（53 项断言）
+│   ├── smoke_test.py           # 打包产物冒烟测试（启动后检查是否秒退）
 │   └── screenshot.py           # 开发用离屏截图校对工具
+├── .github/workflows/          # GitHub Actions：自动打包 Windows exe
 ├── ComfyUI_TagSelect.spec      # PyInstaller 配置
 ├── build_exe.bat / build_exe.sh
 ├── run.bat

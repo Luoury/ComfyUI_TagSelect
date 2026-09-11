@@ -53,14 +53,18 @@ jobs:
           done
 
       - name: 源码自测（离屏，53 项断言）
+        timeout-minutes: 10
         env:
           QT_QPA_PLATFORM: offscreen
         run: python tools/selftest.py
 
       - name: 打包 exe
+        timeout-minutes: 15
         run: python -m PyInstaller ComfyUI_TagSelect.spec --noconfirm --clean
 
+      # 单独设超时：打包产物若因缺依赖卡死，宁可 5 分钟失败也不要拖满 30 分钟
       - name: 冒烟测试打包产物
+        timeout-minutes: 5
         run: python tools/smoke_test.py dist/ComfyUI_TagSelect.exe
 
       - name: 生成校验和

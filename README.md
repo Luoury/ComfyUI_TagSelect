@@ -327,6 +327,7 @@ ComfyUI_TagSelect/
 │   ├── build_data.py           # 标签数据生成流水线
 │   ├── selftest.py             # 离屏功能自测（53 项断言）
 │   ├── smoke_test.py           # 打包产物冒烟测试（启动后检查是否秒退）
+│   ├── version.py              # 输出 __version__，CI 用来推导发布标签
 │   └── screenshot.py           # 开发用离屏截图校对工具
 ├── .github/workflows/          # GitHub Actions：自动打包 Windows exe
 ├── ComfyUI_TagSelect.spec      # PyInstaller 配置

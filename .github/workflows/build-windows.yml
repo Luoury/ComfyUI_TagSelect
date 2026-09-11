@@ -81,8 +81,7 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             TAG="${GITHUB_REF#refs/tags/}"
           else
-            V=$(python -c "import re,pathlib;print(re.search(r'__version__\s*=\s*[\"']([^\"']+)[\"']', pathlib.Path('cts/__init__.py').read_text(encoding='utf-8')).group(1))")
-            TAG="v${V}"
+            TAG="v$(python tools/version.py)"
           fi
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "本次发布到: ${TAG}"

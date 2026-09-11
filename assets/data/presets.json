@@ -1,0 +1,1611 @@
+{
+  "version": 1,
+  "generated": "2026-09-11",
+  "groups": [
+    {
+      "id": "quality",
+      "name": "画质与质量",
+      "desc": "画质起手式与通用质量块：正向堆叠质量/分辨率标签，负向压制低清、压缩伪影与文字水印。",
+      "presets": [
+        {
+          "id": "quality_anime_standard",
+          "name": "动漫通用画质基石",
+          "desc": "几乎适用于所有二次元底模的通用起手式：正向用质量+分辨率标签打底，负向压掉低质量与模糊。建议放在提示词最前面。",
+          "positive": [
+            "masterpiece",
+            "best_quality",
+            "absurdres",
+            "highres",
+            "very_aesthetic"
+          ],
+          "negative": [
+            "worst_quality",
+            "low_quality",
+            "lowres",
+            "jpeg_artifacts",
+            "blurry"
+          ]
+        },
+        {
+          "id": "quality_resolution_detail",
+          "name": "分辨率与细节强化",
+          "desc": "集中使用 danbooru 原生的分辨率与细节标签提升信息密度，适合 SDXL / Illustrious 系底模。注意 hires fix 阶段再叠分辨率标签容易过锐。",
+          "positive": [
+            "absurdres",
+            "highres",
+            "extremely detailed",
+            "sharp_focus",
+            "detailed_background"
+          ],
+          "negative": [
+            "lowres",
+            "blurry",
+            "jpeg_artifacts"
+          ]
+        },
+        {
+          "id": "quality_aesthetic_weighted",
+          "name": "美学加权（NovelAI 权重写法）",
+          "desc": "使用 NovelAI 的花括号加权语法强化质量与美学标签，{} 约等于 1.05 倍权重。适用于 NovelAI 系模型，其他 WebUI 需换算成 (tag:1.05)。",
+          "positive": [
+            "{{masterpiece}}",
+            "{{best_quality}}",
+            "very_aesthetic",
+            "absurdres"
+          ],
+          "negative": [
+            "worst_quality",
+            "low_quality",
+            "lowres"
+          ]
+        },
+        {
+          "id": "quality_photoreal",
+          "name": "写实画质",
+          "desc": "写实/半写实方向的画质块，配合写实底模或 realism LoRA 使用；在纯二次元底模上会明显污染画风。",
+          "positive": [
+            "realistic",
+            "photorealistic",
+            "photo_(medium)",
+            "sharp_focus",
+            "highres",
+            "depth_of_field"
+          ],
+          "negative": [
+            "worst_quality",
+            "low_quality",
+            "blurry",
+            "jpeg_artifacts",
+            "cartoon"
+          ]
+        },
+        {
+          "id": "quality_neg_lowres_blur",
+          "name": "负向：低清与模糊",
+          "desc": "只放低分辨率与模糊相关标签的轻量负向块，适合不想让负向词过长、稀释权重的场景。",
+          "positive": [],
+          "negative": [
+            "lowres",
+            "blurry",
+            "worst_quality",
+            "low_quality",
+            "jpeg_artifacts"
+          ]
+        },
+        {
+          "id": "quality_neg_compression",
+          "name": "负向：压缩与扫描伪影",
+          "desc": "针对老图、扫描件、Web 压缩图的伪影清理，出图常见色带/噪点时使用。",
+          "positive": [],
+          "negative": [
+            "jpeg_artifacts",
+            "chromatic_aberration",
+            "film_grain",
+            "scan_artifacts",
+            "dithering",
+            "halftone"
+          ]
+        },
+        {
+          "id": "quality_hires_fix",
+          "name": "高分辨率修复",
+          "desc": "hires fix 或放大阶段使用：正向补细节标签，负向压掉放大带来的糊边与伪影。",
+          "positive": [
+            "absurdres",
+            "highres",
+            "extremely detailed",
+            "sharp_focus"
+          ],
+          "negative": [
+            "blurry",
+            "jpeg_artifacts",
+            "chromatic_aberration",
+            "lowres",
+            "worst_quality"
+          ]
+        },
+        {
+          "id": "quality_lineart_clean",
+          "name": "线稿干净",
+          "desc": "让线稿更干净利落、减少杂线与断线，适合立绘、设定图与需要后续上色的图。",
+          "positive": [
+            "lineart",
+            "sharp_focus",
+            "highres",
+            "absurdres"
+          ],
+          "negative": [
+            "sketch",
+            "no_lineart",
+            "jpeg_artifacts",
+            "blurry"
+          ]
+        },
+        {
+          "id": "quality_neg_text_watermark",
+          "name": "负向：文字水印（画质向）",
+          "desc": "画质场景下的文字/水印清理块；若模型容易糊字，可再叠加 negative 组的水印专用块。",
+          "positive": [],
+          "negative": [
+            "text",
+            "watermark",
+            "signature",
+            "username",
+            "artist_logo",
+            "english_text"
+          ]
+        },
+        {
+          "id": "quality_sd15_legacy",
+          "name": "SD1.5 时代经典画质咒语",
+          "desc": "SD1.5 时期流传最广的经典画质短语，配合老底模（Anything / 早期二次元模型）仍有明显效果。",
+          "positive": [
+            "masterpiece",
+            "best_quality",
+            "extremely detailed CG unity 8k wallpaper",
+            "ultra-detailed",
+            "highres"
+          ],
+          "negative": [
+            "worst_quality",
+            "low_quality",
+            "normal_quality",
+            "lowres",
+            "jpeg_artifacts",
+            "blurry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "name": "模型专用",
+      "desc": "各大模型家族官方推荐的正向质量串与对应的推荐负面提示词，按底模选择对应预设即可。",
+      "presets": [
+        {
+          "id": "model_nai_v3",
+          "name": "NovelAI V3 官方推荐",
+          "desc": "NovelAI Anime V3 的官方质量标签串（best quality, amazing quality, very aesthetic, absurdres），负面为官方 Heavy UC 预设。V3 的质量标签放在提示词末尾效果更好。",
+          "positive": [
+            "best_quality",
+            "amazing_quality",
+            "very_aesthetic",
+            "absurdres"
+          ],
+          "negative": [
+            "lowres",
+            "{bad}",
+            "error",
+            "fewer",
+            "extra",
+            "missing",
+            "worst_quality",
+            "jpeg_artifacts",
+            "low_quality",
+            "watermark",
+            "unfinished",
+            "displeasing",
+            "chromatic_aberration",
+            "signature",
+            "extra_digits",
+            "artistic_error",
+            "username",
+            "scan",
+            "[abstract]"
+          ]
+        },
+        {
+          "id": "model_nai_v4",
+          "name": "NovelAI V4 官方推荐",
+          "desc": "NovelAI V4 Full 的官方质量标签串（no text, best quality, very aesthetic, absurdres），负面为官方 V4 Heavy UC。V4 起质量标签自动加在提示词末尾。",
+          "positive": [
+            "no_text",
+            "best_quality",
+            "very_aesthetic",
+            "absurdres"
+          ],
+          "negative": [
+            "blurry",
+            "lowres",
+            "error",
+            "film_grain",
+            "scan_artifacts",
+            "worst_quality",
+            "bad_quality",
+            "jpeg_artifacts",
+            "very_displeasing",
+            "chromatic_aberration",
+            "multiple_views",
+            "logo",
+            "too_many_watermarks"
+          ]
+        },
+        {
+          "id": "model_nai_v4_5",
+          "name": "NovelAI V4.5 官方推荐",
+          "desc": "NovelAI V4.5 Full 的官方质量标签串（location, very aesthetic, masterpiece, no text），负面为官方 V4.5 Full Heavy UC。",
+          "positive": [
+            "location",
+            "very_aesthetic",
+            "masterpiece",
+            "no_text"
+          ],
+          "negative": [
+            "lowres",
+            "artistic_error",
+            "film_grain",
+            "scan_artifacts",
+            "worst_quality",
+            "bad_quality",
+            "jpeg_artifacts",
+            "very_displeasing",
+            "chromatic_aberration",
+            "dithering",
+            "halftone",
+            "screentone",
+            "multiple_views",
+            "logo",
+            "too_many_watermarks",
+            "negative_space",
+            "blank_page"
+          ]
+        },
+        {
+          "id": "model_nai_v5",
+          "name": "NovelAI V5 官方推荐",
+          "desc": "NovelAI V5 Full 的官方 Standard 质量标签串，负面为官方 Light V5 Full UC（含 NovelAI 数值强调写法 0::ai-generated::）。",
+          "positive": [
+            "very_aesthetic",
+            "masterpiece",
+            "no_text"
+          ],
+          "negative": [
+            "lowres",
+            "bad_hands",
+            "bad_anatomy",
+            "artistic_error",
+            "sepia",
+            "white_haze",
+            "worst_quality",
+            "very_displeasing",
+            "jpeg_artifacts",
+            "0::ai-generated::"
+          ]
+        },
+        {
+          "id": "model_sd15",
+          "name": "Stable Diffusion 1.5 通用",
+          "desc": "SD1.5 系底模的通用质量串与社区标准负面。SD1.5 偏好短提示词，正向不宜堆太多标签；extremely detailed CG unity 8k wallpaper 是当年最著名的画质短语。",
+          "positive": [
+            "masterpiece",
+            "best_quality",
+            "extremely detailed CG unity 8k wallpaper"
+          ],
+          "negative": [
+            "lowres",
+            "bad_anatomy",
+            "bad_hands",
+            "text",
+            "error",
+            "missing_fingers",
+            "extra_digits",
+            "fewer_digits",
+            "cropped",
+            "worst_quality",
+            "low_quality",
+            "normal_quality",
+            "jpeg_artifacts",
+            "signature",
+            "watermark",
+            "username",
+            "blurry"
+          ]
+        },
+        {
+          "id": "model_sdxl",
+          "name": "SDXL 通用",
+          "desc": "SDXL 系底模（含写实与通用微调）的通用质量串与负面。SDXL 原生 1024 分辨率，absurdres 之类标签在纯写实 SDXL 上可省略。",
+          "positive": [
+            "masterpiece",
+            "best_quality",
+            "highres",
+            "absurdres",
+            "sharp_focus"
+          ],
+          "negative": [
+            "(worst_quality, low_quality:1.4)",
+            "lowres",
+            "blurry",
+            "jpeg_artifacts",
+            "watermark",
+            "signature",
+            "text",
+            "bad_anatomy",
+            "bad_hands"
+          ]
+        },
+        {
+          "id": "model_pony_v6_xl",
+          "name": "Pony Diffusion V6 XL 官方模板",
+          "desc": "Pony V6 XL 官方默认模板：score_9 串 + source 来源标签 + rating 分级标签。注意必须 clip skip 2，且官方明确表示多数情况不需要负向词。",
+          "positive": [
+            "score_9",
+            "score_8_up",
+            "score_7_up",
+            "source_anime",
+            "rating_safe"
+          ],
+          "negative": [
+            "score_4",
+            "score_5",
+            "score_6",
+            "source_pony",
+            "source_furry",
+            "source_cartoon",
+            "worst_quality",
+            "low_quality",
+            "lowres",
+            "watermark",
+            "signature"
+          ]
+        },
+        {
+          "id": "model_pony_v6_negative",
+          "name": "Pony Diffusion V6 XL 专用负面",
+          "desc": "Pony 系的负面思路是「压低低分档 + 排除不想要的 source/rating」，而不是堆画质词。用于想去掉 3D/写实污染或强制 SFW 的场景。",
+          "positive": [],
+          "negative": [
+            "score_4",
+            "score_5",
+            "score_6",
+            "source_pony",
+            "source_furry",
+            "source_cartoon",
+            "3d",
+            "blurry",
+            "low_quality",
+            "lowres",
+            "bad_anatomy",
+            "bad_hands",
+            "extra_digits",
+            "watermark",
+            "signature",
+            "text"
+          ]
+        },
+        {
+          "id": "model_illustrious_xl",
+          "name": "Illustrious XL 官方推荐",
+          "desc": "Illustrious XL 系列的 danbooru 风格质量串：masterpiece, best quality, very aesthetic, absurdres，负面沿用社区标准动漫负面。v1.0 原生支持 1536 分辨率。",
+          "positive": [
+            "masterpiece",
+            "best_quality",
+            "very_aesthetic",
+            "absurdres"
+          ],
+          "negative": [
+            "lowres",
+            "bad_anatomy",
+            "bad_hands",
+            "text",
+            "error",
+            "missing_fingers",
+            "extra_digits",
+            "fewer_digits",
+            "cropped",
+            "worst_quality",
+            "low_quality",
+            "normal_quality",
+            "jpeg_artifacts",
+            "signature",
+            "watermark",
+            "username",
+            "blurry"
+          ]
+        },
+        {
+          "id": "model_noobai_eps",
+          "name": "NoobAI-XL (eps) 官方推荐",
+          "desc": "NoobAI-XL eps 版官方 Prompt Prefix 与 Negative Prompt。eps 版是 NoobAI 的常规版本，采样器选择比 v-pred 宽松。",
+          "positive": [
+            "masterpiece",
+            "best_quality",
+            "newest",
+            "absurdres",
+            "highres",
+            "safe"
+          ],
+          "negative": [
+            "nsfw",
+            "worst_quality",
+            "old",
+            "early",
+            "low_quality",
+            "lowres",
+            "signature",
+            "username",
+            "logo",
+            "bad_hands",
+            "mutated_hands",
+            "mammal",
+            "anthro",
+            "furry",
+            "ambiguous_form",
+            "feral",
+            "semi-anthro"
+          ]
+        },
+        {
+          "id": "model_noobai_vpred",
+          "name": "NoobAI-XL (v-pred) 官方推荐",
+          "desc": "NoobAI-XL v-pred 版官方 Prompt Prefix 与 Negative Prompt。v-pred 必须用 Euler 采样器、CFG 4~5、约 832x1216 分辨率，否则出图发灰。",
+          "positive": [
+            "masterpiece",
+            "best_quality",
+            "newest",
+            "absurdres",
+            "highres",
+            "safe"
+          ],
+          "negative": [
+            "nsfw",
+            "worst_quality",
+            "old",
+            "early",
+            "low_quality",
+            "lowres",
+            "signature",
+            "username",
+            "logo",
+            "bad_hands",
+            "mutated_hands",
+            "mammal",
+            "anthro",
+            "furry",
+            "ambiguous_form",
+            "feral",
+            "semi-anthro"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "style",
+      "name": "画风风格",
+      "desc": "常用画风与媒介标签，从赛璐璐动画到传统绘画媒介、像素与 3D，可单独使用或叠加画师 LoRA。",
+      "presets": [
+        {
+          "id": "style_anime",
+          "name": "日系动画 / 赛璐璐",
+          "desc": "最通用的日系动画赛璐璐上色画风，适合需要干净平涂与描边的场景。",
+          "positive": [
+            "anime_coloring",
+            "cel_rendering",
+            "flat_color",
+            "lineart",
+            "anime_coloring"
+          ],
+          "negative": [
+            "realistic",
+            "3d",
+            "photo_(medium)",
+            "sketch"
+          ]
+        },
+        {
+          "id": "style_official_art",
+          "name": "官方美术 / 版权绘",
+          "desc": "官方立绘与版权绘质感，通常需要搭配具体画师或作品标签才能稳定。",
+          "positive": [
+            "official_style",
+            "official_art_inset",
+            "anime_coloring",
+            "lineart",
+            "highres"
+          ],
+          "negative": [
+            "sketch",
+            "3d",
+            "realistic",
+            "photo_(medium)"
+          ]
+        },
+        {
+          "id": "style_watercolor",
+          "name": "水彩",
+          "desc": "水彩媒介画风，湿边与晕染明显，适合柔和风景与人物特写。",
+          "positive": [
+            "watercolor_(medium)",
+            "watercolor_effect",
+            "watercolor_background",
+            "traditional_media",
+            "painterly"
+          ],
+          "negative": [
+            "3d",
+            "cel_rendering",
+            "photo_(medium)"
+          ]
+        },
+        {
+          "id": "style_oil_painting",
+          "name": "油画 / 厚涂",
+          "desc": "油画与厚涂笔触，颜色厚重、层次丰富，适合古典肖像与风景。",
+          "positive": [
+            "oil_painting_(medium)",
+            "impasto",
+            "painterly",
+            "traditional_media",
+            "chiaroscuro"
+          ],
+          "negative": [
+            "cel_rendering",
+            "flat_color",
+            "pixel_art"
+          ]
+        },
+        {
+          "id": "style_flat_color",
+          "name": "平涂 / 扁平色块",
+          "desc": "扁平化设计风：无渐变、色块分明，适合图标化插画与海报。",
+          "positive": [
+            "flat_color",
+            "soft_shading",
+            "minimalism",
+            "lineart"
+          ],
+          "negative": [
+            "realistic",
+            "3d",
+            "photo_(medium)",
+            "gradient"
+          ]
+        },
+        {
+          "id": "style_pixel_art",
+          "name": "像素画",
+          "desc": "像素艺术风格，注意像素画对分辨率与模型较敏感，建议低步数并固定种子多试。",
+          "positive": [
+            "pixel_art",
+            "8-bit",
+            "retro_artstyle"
+          ],
+          "negative": [
+            "realistic",
+            "photo_(medium)",
+            "blurry",
+            "anti-aliasing"
+          ]
+        },
+        {
+          "id": "style_cyberpunk",
+          "name": "赛博朋克",
+          "desc": "赛博朋克科幻画风：霓虹、义体、高对比冷色调，常与夜景光影块搭配。",
+          "positive": [
+            "cyberpunk",
+            "science_fiction",
+            "neon_sign",
+            "cyberware",
+            "night",
+            "cityscape"
+          ],
+          "negative": [
+            "fantasy",
+            "medieval",
+            "nature"
+          ]
+        },
+        {
+          "id": "style_ukiyo_e",
+          "name": "浮世绘",
+          "desc": "日本江户浮世绘风格，平面色块与清晰轮廓线，适合和风题材。",
+          "positive": [
+            "ukiyo-e",
+            "traditional_media",
+            "flat_color",
+            "lineart",
+            "japanese_clothes"
+          ],
+          "negative": [
+            "3d",
+            "photo_(medium)",
+            "realistic"
+          ]
+        },
+        {
+          "id": "style_ink_wash",
+          "name": "水墨 / 国画",
+          "desc": "水墨与东方绘画媒介，留白与墨色浓淡是核心，适合山水与写意人物。",
+          "positive": [
+            "ink_(medium)",
+            "monochrome",
+            "traditional_media",
+            "painterly",
+            "chinese_clothes"
+          ],
+          "negative": [
+            "photo_(medium)",
+            "3d",
+            "cel_rendering"
+          ]
+        },
+        {
+          "id": "style_retro_80s_anime",
+          "name": "80 年代复古动画",
+          "desc": "上世纪 80 年代复古赛璐璐质感：胶片颗粒、低饱和、复古配色。",
+          "positive": [
+            "retro_artstyle",
+            "1980s_(style)",
+            "film_grain",
+            "retrofuturism",
+            "cel_rendering"
+          ],
+          "negative": [
+            "3d",
+            "photo_(medium)",
+            "highres"
+          ]
+        },
+        {
+          "id": "style_3d_render",
+          "name": "3D 渲染",
+          "desc": "3D/CG 渲染质感，适合需要塑料感、体积光与物理材质的图。",
+          "positive": [
+            "3d",
+            "octane_render",
+            "volumetric_lighting",
+            "depth_of_field",
+            "realistic"
+          ],
+          "negative": [
+            "anime_coloring",
+            "sketch",
+            "watercolor_(medium)",
+            "flat_color"
+          ]
+        },
+        {
+          "id": "style_guofeng",
+          "name": "国风",
+          "desc": "中式国风：汉服、水墨质感与东方配色，常与 ink_(medium) 或 watercolor_(medium) 叠用。",
+          "positive": [
+            "chinese_clothes",
+            "hanfu",
+            "chinese_knot",
+            "traditional_media",
+            "ink_(medium)"
+          ],
+          "negative": [
+            "cyberpunk",
+            "science_fiction",
+            "3d"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lighting",
+      "name": "光影氛围",
+      "desc": "光影与氛围标签：从电影感到霓虹、逆光、体积光，是提升画面完成度最直接的一类提示词。",
+      "presets": [
+        {
+          "id": "light_cinematic",
+          "name": "电影感光影",
+          "desc": "电影级布光：强对比、明确主光与暗部，适合叙事性强的构图。",
+          "positive": [
+            "cinematic_lighting",
+            "dramatic_shadows",
+            "high_contrast",
+            "depth_of_field",
+            "film_grain"
+          ],
+          "negative": [
+            "flat_lighting",
+            "overexposed",
+            "washed_out"
+          ]
+        },
+        {
+          "id": "light_rim",
+          "name": "轮廓光 / 边缘光",
+          "desc": "在主光之外打一圈边缘光，把角色从背景中剥离出来，人物特写非常常用。",
+          "positive": [
+            "rim_light",
+            "backlighting",
+            "glowing",
+            "light_rays"
+          ],
+          "negative": [
+            "flat_lighting",
+            "soft_shadow"
+          ]
+        },
+        {
+          "id": "light_volumetric",
+          "name": "体积光",
+          "desc": "空气中的可见光柱与雾感，适合森林、废墟、舞台等有介质的环境。",
+          "positive": [
+            "volumetric_lighting",
+            "light_rays",
+            "god_rays",
+            "fog",
+            "dust"
+          ],
+          "negative": [
+            "flat_lighting",
+            "simple_background"
+          ]
+        },
+        {
+          "id": "light_golden_hour",
+          "name": "黄金时刻",
+          "desc": "日出日落前后的暖金色低角度光，适合风景人像与怀旧氛围。",
+          "positive": [
+            "golden_hour",
+            "sunset",
+            "sunlight",
+            "warm_lighting",
+            "lens_flare"
+          ],
+          "negative": [
+            "night",
+            "cold_lighting",
+            "monochrome"
+          ]
+        },
+        {
+          "id": "light_neon",
+          "name": "霓虹夜色",
+          "desc": "霓虹灯主导的夜景布光：品红/青色高饱和光源与湿地面反射。",
+          "positive": [
+            "neon_lights",
+            "neon_sign",
+            "night",
+            "city_lights",
+            "reflection",
+            "wet"
+          ],
+          "negative": [
+            "day",
+            "sunlight",
+            "flat_lighting"
+          ]
+        },
+        {
+          "id": "light_chiaroscuro",
+          "name": "明暗对照法",
+          "desc": "古典明暗对照：大块暗部包围单一强光源，戏剧张力强，常见于油画感肖像。",
+          "positive": [
+            "chiaroscuro",
+            "dramatic_shadows",
+            "low-key_lighting",
+            "candlelight",
+            "high_contrast"
+          ],
+          "negative": [
+            "flat_lighting",
+            "overexposed",
+            "bright"
+          ]
+        },
+        {
+          "id": "light_soft",
+          "name": "柔光 / 影棚光",
+          "desc": "柔和的散射光，阴影过渡平缓，适合干净通透的立绘与商品感画面。",
+          "positive": [
+            "soft_lighting",
+            "studio_lighting",
+            "diffused_light",
+            "pastel_colors"
+          ],
+          "negative": [
+            "harsh_shadow",
+            "high_contrast",
+            "dramatic_shadows"
+          ]
+        },
+        {
+          "id": "light_god_rays",
+          "name": "耶稣光 / 丁达尔效应",
+          "desc": "穿透云层或树冠的光柱（丁达尔效应），常用于神圣感与风景空镜。",
+          "positive": [
+            "god_rays",
+            "light_rays",
+            "sunbeam",
+            "volumetric_lighting",
+            "cloudy_sky"
+          ],
+          "negative": [
+            "flat_lighting",
+            "night"
+          ]
+        },
+        {
+          "id": "light_backlight",
+          "name": "逆光 / 剪影",
+          "desc": "光源在被摄体背后，形成半剪影与发丝透光效果，情绪感强。",
+          "positive": [
+            "backlighting",
+            "silhouette",
+            "sunlight",
+            "lens_flare",
+            "glowing"
+          ],
+          "negative": [
+            "flat_lighting",
+            "front_lighting"
+          ]
+        },
+        {
+          "id": "light_night_moon",
+          "name": "月夜冷光",
+          "desc": "月光与夜空冷色调布光，适合静谧、忧郁或奇幻夜景。",
+          "positive": [
+            "moonlight",
+            "night",
+            "starry_sky",
+            "full_moon",
+            "cold_lighting",
+            "blue_theme"
+          ],
+          "negative": [
+            "sunlight",
+            "day",
+            "warm_lighting"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "composition",
+      "name": "构图视角",
+      "desc": "取景范围与机位视角标签，用于精确控制景别、角度和人物朝向。",
+      "presets": [
+        {
+          "id": "comp_portrait",
+          "name": "半身肖像 / 胸像",
+          "desc": "以头部与上胸为主的肖像景别，突出表情与五官细节。",
+          "positive": [
+            "portrait",
+            "upper_body",
+            "close-up",
+            "looking_at_viewer",
+            "detailed_face"
+          ],
+          "negative": [
+            "full_body",
+            "wide_shot",
+            "from_below"
+          ]
+        },
+        {
+          "id": "comp_upper_body",
+          "name": "上半身",
+          "desc": "标准上半身取景，兼顾表情与服装上半部分，是最常用的构图之一。",
+          "positive": [
+            "upper_body",
+            "looking_at_viewer",
+            "simple_background"
+          ],
+          "negative": [
+            "full_body",
+            "wide_shot"
+          ]
+        },
+        {
+          "id": "comp_cowboy_shot",
+          "name": "牛仔镜头（七分身）",
+          "desc": "从头部到大腿中段的取景（cowboy shot），介于半身与全身之间，适合展示服装整体。",
+          "positive": [
+            "cowboy_shot",
+            "standing",
+            "looking_at_viewer"
+          ],
+          "negative": [
+            "close-up",
+            "portrait",
+            "wide_shot"
+          ]
+        },
+        {
+          "id": "comp_full_body",
+          "name": "全身",
+          "desc": "完整全身取景，展示服饰与姿态全貌，常需配合较高分辨率避免脸崩。",
+          "positive": [
+            "full_body",
+            "standing",
+            "solo",
+            "cowboy_shot"
+          ],
+          "negative": [
+            "close-up",
+            "portrait",
+            "cropped"
+          ]
+        },
+        {
+          "id": "comp_close_up",
+          "name": "特写",
+          "desc": "面部或局部特写，强调细节与情绪；大特写下容易出现五官畸变，建议配合手部/五官负面块。",
+          "positive": [
+            "close-up",
+            "portrait",
+            "detailed_face",
+            "looking_at_viewer"
+          ],
+          "negative": [
+            "full_body",
+            "wide_shot",
+            "from_below"
+          ]
+        },
+        {
+          "id": "comp_wide_shot",
+          "name": "远景 / 全景",
+          "desc": "大范围远景，强调环境与人物的关系，人物占比小。",
+          "positive": [
+            "wide_shot",
+            "landscape",
+            "scenery",
+            "from_above",
+            "sky"
+          ],
+          "negative": [
+            "close-up",
+            "portrait"
+          ]
+        },
+        {
+          "id": "comp_from_above",
+          "name": "俯视视角",
+          "desc": "从上方俯拍，人物显得娇小、环境一览无余，常配合高角度。",
+          "positive": [
+            "from_above",
+            "looking_down",
+            "standing"
+          ],
+          "negative": [
+            "from_below"
+          ]
+        },
+        {
+          "id": "comp_from_below",
+          "name": "仰视视角",
+          "desc": "从下方仰拍，人物显得高大有压迫感，常用于英雄式构图。",
+          "positive": [
+            "from_below",
+            "looking_up",
+            "dutch_angle"
+          ],
+          "negative": [
+            "from_above"
+          ]
+        },
+        {
+          "id": "comp_dutch_angle",
+          "name": "荷兰角 / 倾斜构图",
+          "desc": "画面轴向倾斜，制造不安与动感，适合战斗与心理场景。",
+          "positive": [
+            "dutch_angle",
+            "dynamic_pose",
+            "motion_blur"
+          ],
+          "negative": [
+            "symmetrical",
+            "static_pose"
+          ]
+        },
+        {
+          "id": "comp_from_side",
+          "name": "侧面视角",
+          "desc": "正侧面机位，突出侧面轮廓与鼻梁线条，适合剪影与影视感画面。",
+          "positive": [
+            "from_side",
+            "profile",
+            "looking_at_viewer"
+          ],
+          "negative": [
+            "from_behind",
+            "looking_at_viewer"
+          ]
+        },
+        {
+          "id": "comp_from_behind",
+          "name": "背面视角",
+          "desc": "背对镜头，强调背影、发型与服装背面，常用于回眸与离别构图。",
+          "positive": [
+            "from_behind",
+            "looking_back",
+            "back",
+            "standing"
+          ],
+          "negative": [
+            "looking_at_viewer",
+            "portrait"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scenario",
+      "name": "场景题材",
+      "desc": "成组的场景标签包，直接描述环境、时间与氛围，可与构图和光影预设叠加。",
+      "presets": [
+        {
+          "id": "scene_school_life",
+          "name": "校园日常",
+          "desc": "日系校园日常场景：教室、制服与樱花，适合青春校园题材。",
+          "positive": [
+            "classroom",
+            "school_uniform",
+            "serafuku",
+            "cherry_blossoms",
+            "desk",
+            "window",
+            "spring_(season)"
+          ],
+          "negative": [
+            "night",
+            "fantasy",
+            "cyberpunk"
+          ]
+        },
+        {
+          "id": "scene_cyberpunk_city",
+          "name": "赛博朋克都市",
+          "desc": "高密度霓虹都市夜景：招牌、雨夜与反射地面，适合科幻与街头题材。",
+          "positive": [
+            "cyberpunk",
+            "cityscape",
+            "neon_sign",
+            "night",
+            "rain",
+            "wet",
+            "reflection",
+            "crowd"
+          ],
+          "negative": [
+            "nature",
+            "medieval",
+            "day"
+          ]
+        },
+        {
+          "id": "scene_fantasy_adventure",
+          "name": "奇幻冒险",
+          "desc": "剑与魔法的奇幻旅途：森林、城堡与武器，适合 RPG 风格插画。",
+          "positive": [
+            "fantasy",
+            "castle",
+            "forest",
+            "sword",
+            "armor",
+            "ruins",
+            "magic"
+          ],
+          "negative": [
+            "cyberpunk",
+            "modern",
+            "cityscape"
+          ]
+        },
+        {
+          "id": "scene_japanese_summer_festival",
+          "name": "和风夏日祭",
+          "desc": "日本夏日祭典：浴衣、烟花与神社石阶，暖色夜景氛围。",
+          "positive": [
+            "summer_festival",
+            "yukata",
+            "fireworks",
+            "shrine",
+            "torii",
+            "night",
+            "festival",
+            "japanese_clothes"
+          ],
+          "negative": [
+            "winter",
+            "snow",
+            "cyberpunk"
+          ]
+        },
+        {
+          "id": "scene_winter_snow",
+          "name": "冬日雪景",
+          "desc": "冬雪场景：积雪、围巾与呼出的白气，冷色调为主。",
+          "positive": [
+            "snow",
+            "winter",
+            "snowing",
+            "scarf",
+            "mittens",
+            "coat",
+            "cold",
+            "breath"
+          ],
+          "negative": [
+            "summer",
+            "beach",
+            "sunlight"
+          ]
+        },
+        {
+          "id": "scene_starry_night",
+          "name": "星空夜景",
+          "desc": "银河与星空下的夜景，适合静谧、宏大或浪漫氛围。",
+          "positive": [
+            "starry_sky",
+            "star_(sky)",
+            "milky_way",
+            "night",
+            "full_moon",
+            "silhouette"
+          ],
+          "negative": [
+            "day",
+            "sunlight",
+            "cityscape"
+          ]
+        },
+        {
+          "id": "scene_cafe",
+          "name": "咖啡厅",
+          "desc": "室内咖啡厅场景：窗边、咖啡与暖光，适合日常治愈系。",
+          "positive": [
+            "cafe",
+            "coffee",
+            "cup",
+            "window",
+            "indoors",
+            "table",
+            "chair",
+            "warm_lighting"
+          ],
+          "negative": [
+            "outdoors",
+            "night",
+            "battle"
+          ]
+        },
+        {
+          "id": "scene_shrine",
+          "name": "神社",
+          "desc": "日本神社场景：鸟居、石阶与绘马，常与和服或巫女搭配。",
+          "positive": [
+            "shrine",
+            "torii",
+            "japanese_clothes",
+            "stone_stairs",
+            "tree",
+            "day"
+          ],
+          "negative": [
+            "cyberpunk",
+            "modern",
+            "cityscape"
+          ]
+        },
+        {
+          "id": "scene_beach_summer",
+          "name": "夏日海滨",
+          "desc": "海滩与盛夏：海面、沙滩与强日光，适合泳装与青春题材。",
+          "positive": [
+            "beach",
+            "ocean",
+            "summer",
+            "sky",
+            "cloud",
+            "sunlight",
+            "swimsuit",
+            "sand"
+          ],
+          "negative": [
+            "winter",
+            "snow",
+            "indoors"
+          ]
+        },
+        {
+          "id": "scene_autumn_park",
+          "name": "秋日公园",
+          "desc": "秋叶与公园长椅，暖橙色调的怀旧氛围。",
+          "positive": [
+            "autumn",
+            "autumn_leaves",
+            "tree",
+            "park",
+            "bench",
+            "maple_leaf",
+            "falling_leaves"
+          ],
+          "negative": [
+            "spring_(season)",
+            "snow",
+            "summer"
+          ]
+        },
+        {
+          "id": "scene_rainy_street",
+          "name": "雨夜街道",
+          "desc": "雨夜的城市街道：雨滴、水洼倒影与伞，情绪感强。",
+          "positive": [
+            "rain",
+            "night",
+            "umbrella",
+            "wet",
+            "reflection",
+            "city",
+            "puddle"
+          ],
+          "negative": [
+            "sunlight",
+            "desert",
+            "clear_sky"
+          ]
+        },
+        {
+          "id": "scene_sunset_rooftop",
+          "name": "黄昏天台",
+          "desc": "傍晚的天台或高处，逆光晚霞与城市轮廓，适合收束情绪的画面。",
+          "positive": [
+            "sunset",
+            "rooftop",
+            "sky",
+            "cloud",
+            "silhouette",
+            "cityscape",
+            "dusk",
+            "orange_sky"
+          ],
+          "negative": [
+            "night",
+            "indoors",
+            "snow"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "character",
+      "name": "角色模板",
+      "desc": "开箱即用的角色标签起手包，已包含人物特征、发型瞳色与标志性服饰，可直接接在质量块之后使用。",
+      "presets": [
+        {
+          "id": "char_hatsune_miku",
+          "name": "初音未来（Hatsune Miku）",
+          "desc": "VOCALOID 初音未来标志性特征包：青绿双马尾、青色瞳发、分离式袖套、领带与过膝袜。角色相关标签建议靠前，避免被风格标签稀释。",
+          "positive": [
+            "hatsune_miku",
+            "vocaloid",
+            "1girl",
+            "solo",
+            "twintails",
+            "very_long_hair",
+            "aqua_hair",
+            "aqua_eyes",
+            "detached_sleeves",
+            "necktie",
+            "thighhighs",
+            "hair_ornament",
+            "headphones",
+            "grey_skirt"
+          ],
+          "negative": [
+            "1boy",
+            "multiple_girls",
+            "short_hair",
+            "black_hair"
+          ]
+        },
+        {
+          "id": "char_schoolgirl",
+          "name": "校园少女",
+          "desc": "经典日系校园少女模板：水手服、百褶裙与及膝袜，可替换发色瞳色快速派生角色。",
+          "positive": [
+            "1girl",
+            "solo",
+            "school_uniform",
+            "serafuku",
+            "pleated_skirt",
+            "kneehighs",
+            "loafers",
+            "hair_ribbon",
+            "brown_hair",
+            "brown_eyes",
+            "smile"
+          ],
+          "negative": [
+            "1boy",
+            "mature_female",
+            "armor",
+            "weapon"
+          ]
+        },
+        {
+          "id": "char_fantasy_knight",
+          "name": "奇幻女骑士",
+          "desc": "西式奇幻骑士模板：板甲、长剑与披风，适合战场与冒险题材。",
+          "positive": [
+            "1girl",
+            "solo",
+            "knight",
+            "plate_armor",
+            "armor",
+            "cape",
+            "sword",
+            "gauntlets",
+            "blonde_hair",
+            "blue_eyes",
+            "serious"
+          ],
+          "negative": [
+            "school_uniform",
+            "modern_clothes",
+            "cyberpunk"
+          ]
+        },
+        {
+          "id": "char_magical_girl",
+          "name": "魔法少女",
+          "desc": "魔法少女模板：魔法杖、蝴蝶结与夸张裙装，常与光效标签叠用。",
+          "positive": [
+            "1girl",
+            "solo",
+            "magical_girl",
+            "staff",
+            "bowtie",
+            "frills",
+            "dress",
+            "hair_ornament",
+            "glowing",
+            "twintails"
+          ],
+          "negative": [
+            "1boy",
+            "armor",
+            "realistic"
+          ]
+        },
+        {
+          "id": "char_kimono_lady",
+          "name": "和服美人",
+          "desc": "和风女性角色模板：和服、腰带与发簪，适合夏日祭与神社场景。",
+          "positive": [
+            "1girl",
+            "solo",
+            "kimono",
+            "japanese_clothes",
+            "obi",
+            "hair_flower",
+            "hair_ornament",
+            "black_hair",
+            "updo"
+          ],
+          "negative": [
+            "school_uniform",
+            "cyberpunk",
+            "armor"
+          ]
+        },
+        {
+          "id": "char_cyberpunk_hacker",
+          "name": "赛博朋克黑客",
+          "desc": "赛博朋克黑客模板：耳机、护目镜与义体改造，冷色调科技感。",
+          "positive": [
+            "1girl",
+            "solo",
+            "cyberpunk",
+            "headphones",
+            "visor",
+            "cyberware",
+            "jacket",
+            "short_hair",
+            "neon_lights",
+            "glowing"
+          ],
+          "negative": [
+            "fantasy",
+            "medieval",
+            "kimono"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "negative",
+      "name": "负面提示词",
+      "desc": "可复用的负面提示词块，按问题类型拆分，可自由组合；负面词过多会稀释权重，建议按需取 2~3 块。",
+      "presets": [
+        {
+          "id": "neg_general",
+          "name": "通用负面",
+          "desc": "最常用的通用负面块，覆盖低质量、解剖错误、文字水印与构图裁切，适合作为默认负面。",
+          "positive": [],
+          "negative": [
+            "lowres",
+            "worst_quality",
+            "low_quality",
+            "normal_quality",
+            "jpeg_artifacts",
+            "blurry",
+            "bad_anatomy",
+            "bad_hands",
+            "text",
+            "error",
+            "missing_fingers",
+            "extra_digits",
+            "fewer_digits",
+            "cropped",
+            "signature",
+            "watermark",
+            "username"
+          ]
+        },
+        {
+          "id": "neg_hands",
+          "name": "手部崩坏修复",
+          "desc": "专治手指数量错误、融合与畸形手；手部崩坏严重时可再提高这些词的权重。",
+          "positive": [],
+          "negative": [
+            "bad_hands",
+            "mutated_hands",
+            "extra_fingers",
+            "fused_fingers",
+            "missing_fingers",
+            "extra_digits",
+            "fewer_digits",
+            "malformed_hands",
+            "polydactyly"
+          ]
+        },
+        {
+          "id": "neg_multi_person",
+          "name": "多人 / 多头修复",
+          "desc": "画面出现多余人物、复制头脸或肢体时使用，也可用于强制单人构图。",
+          "positive": [],
+          "negative": [
+            "multiple_girls",
+            "multiple_boys",
+            "2girls",
+            "3girls",
+            "crowd",
+            "extra_heads",
+            "multiple_views",
+            "duplicate",
+            "clone",
+            "conjoined"
+          ]
+        },
+        {
+          "id": "neg_text_watermark",
+          "name": "文字水印去除",
+          "desc": "清除画面中的文字、签名、水印与站点 logo，出图经常糊字时必备。",
+          "positive": [],
+          "negative": [
+            "text",
+            "watermark",
+            "signature",
+            "username",
+            "artist_logo",
+            "logo",
+            "english_text",
+            "speech_bubble",
+            "caption",
+            "web_address",
+            "patreon_username",
+            "web_address"
+          ]
+        },
+        {
+          "id": "neg_low_quality",
+          "name": "低质量修复",
+          "desc": "针对整体崩坏、涂抹感与细节缺失的强负面块，配合更高步数与 CFG 使用。",
+          "positive": [],
+          "negative": [
+            "worst_quality",
+            "low_quality",
+            "normal_quality",
+            "lowres",
+            "blurry",
+            "jpeg_artifacts",
+            "bad_proportions",
+            "deformed",
+            "unfinished",
+            "displeasing"
+          ]
+        },
+        {
+          "id": "neg_nsfw_suppress",
+          "name": "NSFW 抑制",
+          "desc": "把画面推离露骨内容的负面块，用于需要稳定输出 SFW 的场景。注意没有任何负面词能 100% 保证安全，仍建议配合安全向模型或后置过滤。",
+          "positive": [],
+          "negative": [
+            "nsfw",
+            "explicit",
+            "nude",
+            "nipples",
+            "completely_nude",
+            "sex",
+            "censored",
+            "mosaic_censoring",
+            "bar_censor",
+            "large_breasts",
+            "cleavage",
+            "underboob"
+          ]
+        },
+        {
+          "id": "neg_limbs_feet",
+          "name": "肢体与足部崩坏",
+          "desc": "处理多余/缺失肢体、脚部畸形与比例失调，是全身图最常见的崩坏类型。",
+          "positive": [],
+          "negative": [
+            "bad_feet",
+            "extra_legs",
+            "missing_legs",
+            "extra_arms",
+            "missing_arms",
+            "bad_proportions",
+            "long_neck",
+            "deformed",
+            "amputee",
+            "fused_limbs"
+          ]
+        },
+        {
+          "id": "neg_background",
+          "name": "背景与构图崩坏",
+          "desc": "清理背景杂乱、边框、留白异常与拼接感，适合需要干净背景的立绘。",
+          "positive": [],
+          "negative": [
+            "simple_background",
+            "blank_page",
+            "negative_space",
+            "border",
+            "cropped",
+            "out_of_frame",
+            "jpeg_artifacts",
+            "multiple_views",
+            "collage"
+          ]
+        },
+        {
+          "id": "neg_style_pollution",
+          "name": "风格污染抑制",
+          "desc": "在二次元底模上排除 3D/写实/照片污染，或在写实底模上排除卡通化，按需二选一使用。",
+          "positive": [],
+          "negative": [
+            "3d",
+            "realistic",
+            "photo_(medium)",
+            "photorealistic",
+            "sketch",
+            "watermark",
+            "greyscale",
+            "monochrome"
+          ]
+        }
+      ]
+    }
+  ]
+}

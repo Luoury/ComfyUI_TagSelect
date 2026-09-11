@@ -1,0 +1,9 @@
+# ComfyUI_TagSelect 运行依赖
+#
+# 推荐 Python 3.10 / 3.11 / 3.12（PyQt5 与 PyInstaller 的 wheel 最齐全）。
+# 程序同时兼容 PySide6：如果环境里装的是 PySide6 而没有 PyQt5，也能直接跑。
+
+PyQt5>=5.15.9
+
+# 打包成 .exe 时才需要
+pyinstaller>=6.0

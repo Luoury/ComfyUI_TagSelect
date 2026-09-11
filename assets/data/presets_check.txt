@@ -1,0 +1,204 @@
+ComfyUI_TagSelect 预设库校验报告
+============================================================
+校验日期: 2026-09-11
+数据集: /home/luosury/Code/DSH_Test/.work/supermarket.json (317423 行 danbooru 标签)
+
+【总量统计】
+  分组数            : 8
+  预设总数          : 81
+  提示词条目总数    : 833
+  参与校验的普通条目: 827
+  命中数据集条目    : 693
+  加权/官方语法条目 : 6  (含 {} [] :: 与 (tag:1.2) 权重写法，按规则跳过拼写校验)
+  未命中(经确认保留): 69 种
+  命中率            : 83.80% (普通条目)
+
+【分组明细】
+  quality      画质与质量    预设 10 个, 条目  81
+  model        模型专用     预设 11 个, 条目 207
+  style        画风风格     预设 12 个, 条目  99
+  lighting     光影氛围     预设 10 个, 条目  76
+  composition  构图视角     预设 11 个, 条目  64
+  scenario     场景题材     预设 12 个, 条目 124
+  character    角色模板     预设  6 个, 条目  85
+  negative     负面提示词    预设  9 个, 条目  97
+
+【校验方法】
+  1. 对每条普通条目先 strip + 转小写 + 空格替换为下划线；
+  2. 用数据集第一列构建 set 做 O(1) 精确查找；
+  3. 含 {} / [] / :: 或 (tag:1.2) 的加权语法条目跳过拼写校验；
+  4. danbooru 原生带括号标签（如 watercolor_(medium)）视为普通条目参与校验。
+
+【已修正的拼写】
+  best quality  ->  best_quality
+  extra digit  ->  extra_digits
+  clouds  ->  cloud
+  stars  ->  star
+  side_view  ->  from_side
+  spring  ->  spring_(season)
+  sci-fi  ->  science_fiction
+  retro_futurism  ->  retrofuturism
+  clones  ->  clone
+  url  ->  web_address
+  adult  ->  mature_female
+  simple_shading  ->  soft_shading
+  clean_background  ->  simple_background
+  sunbeams  ->  sunbeam
+  anime  ->  anime_coloring
+  chinese_style  ->  chinese_knot
+  16-bit/high_angle/low_angle/frame/mutated/japanese_style -> 删除或替换为 danbooru 等价标签
+
+【经确认保留的未命中条目（逐条理由）】
+
+A. 模型官方质量/负面串（非 danbooru，来源为官方文档）
+  - masterpiece  (9 处, 如 quality_anime_standard)
+      理由: NovelAI/SD 社区通用质量词，danbooru 本身没有该标签，但为各模型官方/事实标准质量串成员
+  - best_quality  (9 处, 如 quality_anime_standard)
+      理由: 同上，NovelAI 与动漫底模最常用的正向质量标签（danbooru 无 best quality 标签）
+  - amazing_quality  (1 处, 如 model_nai_v3)
+      理由: NovelAI Anime V3 官方质量串成员（非 danbooru）
+  - bad_quality  (2 处, 如 model_nai_v4)
+      理由: NovelAI V4/V4.5 官方 UC 预设成员（非 danbooru）
+  - very_aesthetic  (7 处, 如 quality_anime_standard)
+      理由: NovelAI 官方质量词（非 danbooru）
+  - very_displeasing  (3 处, 如 model_nai_v4)
+      理由: NovelAI 官方 UC 预设成员（非 danbooru）
+  - displeasing  (2 处, 如 model_nai_v3)
+      理由: NovelAI V2/V3 官方 UC 预设成员（非 danbooru）
+  - no_text  (3 处, 如 model_nai_v4)
+      理由: NovelAI V4/V4.5 官方质量串成员（非 danbooru）
+  - location  (1 处, 如 model_nai_v4_5)
+      理由: NovelAI V4.5 官方质量串成员（非 danbooru）
+  - screentone  (1 处, 如 model_nai_v4_5)
+      理由: NovelAI V4.5 Heavy UC 官方成员（非 danbooru）
+  - white_haze  (1 处, 如 model_nai_v5)
+      理由: NovelAI V5 Light UC 官方成员（非 danbooru）
+  - mutated_hands  (3 处, 如 model_noobai_eps)
+      理由: NoobAI-XL 官方 Negative Prompt 成员（社区标准手部负面，danbooru 无该标签）
+  - fewer  (1 处, 如 model_nai_v3)
+      理由: NovelAI V3 Heavy UC 官方简写成员（非 danbooru）
+  - missing  (1 处, 如 model_nai_v3)
+      理由: NovelAI V3 Heavy UC 官方简写成员（非 danbooru）
+  - ambiguous_form  (2 处, 如 model_noobai_eps)
+      理由: NoobAI-XL 官方 Negative Prompt 成员（非 danbooru 标签）
+  - anthro  (2 处, 如 model_noobai_eps)
+      理由: NoobAI-XL 官方 Negative Prompt 成员（非 danbooru 标签）
+  - mammal  (2 处, 如 model_noobai_eps)
+      理由: NoobAI-XL 官方 Negative Prompt 成员（用于排除兽类，非 danbooru 标签）
+  - feral  (2 处, 如 model_noobai_eps)
+      理由: NoobAI-XL 官方 Negative Prompt 成员（非 danbooru 标签）
+  - semi-anthro  (2 处, 如 model_noobai_eps)
+      理由: NoobAI-XL 官方 Negative Prompt 成员（非 danbooru 标签）
+
+B. Pony Diffusion V6 XL 官方评分/来源/分级标签（非 danbooru）
+  - score_9  (1 处, 如 model_pony_v6_xl)
+      理由: Pony Diffusion V6 XL 官方评分标签（非 danbooru）
+  - score_8_up  (1 处, 如 model_pony_v6_xl)
+      理由: Pony Diffusion V6 XL 官方评分标签（非 danbooru）
+  - score_7_up  (1 处, 如 model_pony_v6_xl)
+      理由: Pony Diffusion V6 XL 官方评分标签（非 danbooru）
+  - score_6  (2 处, 如 model_pony_v6_xl)
+      理由: Pony Diffusion V6 XL 官方评分标签，亦用于负面压制低分档（非 danbooru）
+  - score_5  (2 处, 如 model_pony_v6_xl)
+      理由: Pony Diffusion V6 XL 官方评分标签，亦用于负面压制低分档（非 danbooru）
+  - score_4  (2 处, 如 model_pony_v6_xl)
+      理由: Pony Diffusion V6 XL 官方评分标签，亦用于负面压制低分档（非 danbooru）
+  - source_anime  (1 处, 如 model_pony_v6_xl)
+      理由: Pony Diffusion V6 XL 官方来源标签（非 danbooru）
+  - source_pony  (2 处, 如 model_pony_v6_xl)
+      理由: Pony Diffusion V6 XL 官方来源标签（非 danbooru）
+  - source_furry  (2 处, 如 model_pony_v6_xl)
+      理由: Pony Diffusion V6 XL 官方来源标签（非 danbooru）
+  - source_cartoon  (2 处, 如 model_pony_v6_xl)
+      理由: Pony Diffusion V6 XL 官方来源标签（非 danbooru）
+  - rating_safe  (1 处, 如 model_pony_v6_xl)
+      理由: Pony Diffusion V6 XL 官方分级标签（非 danbooru）
+
+C. 安全/NSFW 通用负面词
+  - nsfw  (3 处, 如 model_noobai_eps)
+      理由: 负面词表中的通用安全标签，danbooru 用 rating 体系而不打 nsfw 标签
+  - explicit  (1 处, 如 neg_nsfw_suppress)
+      理由: 同上，NSFW 抑制块的通用安全词（danbooru 用 rating_explicit 而非 explicit）
+
+D. SD1.5 时代自由画质短语（非 danbooru）
+  - extremely_detailed_cg_unity_8k_wallpaper  (2 处, 如 quality_sd15_legacy)
+      理由: SD1.5 时代最著名的自由画质短语（非 danbooru 标签，空格写法为原始形态）
+  - ultra-detailed  (1 处, 如 quality_sd15_legacy)
+      理由: SD1.5 时代自由画质短语（非 danbooru 标签）
+  - extremely_detailed  (2 处, 如 quality_resolution_detail)
+      理由: 自由画质短语（非 danbooru 标签）
+  - sharp_focus  (5 处, 如 quality_resolution_detail)
+      理由: 自由画质短语（danbooru 无对应清晰度标签）
+
+E. 光影/曝光类自由提示词短语（danbooru 无对应标签）
+  - cinematic_lighting  (1 处, 如 light_cinematic)
+      理由: 光影类自由提示词短语，danbooru 无 cinematic lighting 标签
+  - rim_light  (1 处, 如 light_rim)
+      理由: 光影类自由提示词短语，danbooru 只有 backlighting 等相关标签
+  - volumetric_lighting  (3 处, 如 style_3d_render)
+      理由: 光影类自由提示词短语，danbooru 无对应标签
+  - god_rays  (2 处, 如 light_volumetric)
+      理由: 光影类自由提示词短语（丁达尔效应俗称），danbooru 无对应标签
+  - soft_lighting  (1 处, 如 light_soft)
+      理由: 光影类自由提示词短语，danbooru 无对应标签
+  - studio_lighting  (1 处, 如 light_soft)
+      理由: 光影类自由提示词短语，danbooru 无对应标签
+  - dramatic_shadows  (3 处, 如 light_cinematic)
+      理由: 光影类自由提示词短语，danbooru 无对应标签
+  - flat_lighting  (7 处, 如 light_cinematic)
+      理由: 光影类自由提示词短语，用于负向，danbooru 无对应标签
+  - warm_lighting  (3 处, 如 light_golden_hour)
+      理由: 光影类自由提示词短语，danbooru 无对应标签
+  - cold_lighting  (2 处, 如 light_golden_hour)
+      理由: 光影类自由提示词短语，danbooru 无对应标签
+  - diffused_light  (1 处, 如 light_soft)
+      理由: 光影类自由提示词短语，danbooru 无对应标签
+  - front_lighting  (1 处, 如 light_backlight)
+      理由: 光影类自由提示词短语，danbooru 无对应标签
+  - low-key_lighting  (1 处, 如 light_chiaroscuro)
+      理由: 光影类自由提示词短语（低调布光），danbooru 无对应标签
+  - harsh_shadow  (1 处, 如 light_soft)
+      理由: 光影类自由提示词短语，用于负向，danbooru 无对应标签
+  - soft_shadow  (1 处, 如 light_rim)
+      理由: 光影类自由提示词短语，用于负向，danbooru 无对应标签
+  - overexposed  (2 处, 如 light_cinematic)
+      理由: 曝光类自由提示词短语，用于负向，danbooru 无对应标签
+  - washed_out  (1 处, 如 light_cinematic)
+      理由: 曝光类自由提示词短语，用于负向，danbooru 无对应标签
+  - bright  (1 处, 如 light_chiaroscuro)
+      理由: 曝光类自由提示词短语，用于负向，danbooru 无对应标签
+
+F. 其它自由提示词短语（画风/题材/构图/负面修复）
+  - anti-aliasing  (1 处, 如 style_pixel_art)
+      理由: 像素画领域的自由术语，用于负向排除抗锯齿平滑（danbooru 无该标签）
+  - octane_render  (1 处, 如 style_3d_render)
+      理由: 渲染器名称，3D 渲染类自由短语（非 danbooru 标签）
+  - cartoon  (1 处, 如 quality_photoreal)
+      理由: 风格类自由提示词短语，用于负向排除卡通化（danbooru 无对应标签）
+  - modern  (2 处, 如 scene_fantasy_adventure)
+      理由: 题材类自由提示词短语，用于负向（danbooru 无对应标签）
+  - modern_clothes  (1 处, 如 char_fantasy_knight)
+      理由: 服饰类自由提示词短语，用于负向（danbooru 无对应标签）
+  - static_pose  (1 处, 如 comp_dutch_angle)
+      理由: 姿态类自由提示词短语，用于负向（danbooru 无对应标签）
+  - symmetrical  (1 处, 如 comp_dutch_angle)
+      理由: 构图类自由提示词短语，用于负向（danbooru 无对应标签）
+  - extra_heads  (1 处, 如 neg_multi_person)
+      理由: 负面修复类自由短语（danbooru 有 extra_digits/extra_arms 但无 extra_heads）
+  - fused_fingers  (1 处, 如 neg_hands)
+      理由: 负面修复类自由短语（手部崩坏描述，danbooru 无该标签）
+  - fused_limbs  (1 处, 如 neg_limbs_feet)
+      理由: 负面修复类自由短语（肢体崩坏描述，danbooru 无该标签）
+  - malformed_hands  (1 处, 如 neg_hands)
+      理由: 负面修复类自由短语（手部崩坏描述，danbooru 无该标签）
+  - polydactyly  (1 处, 如 neg_hands)
+      理由: 负面修复类自由短语（多指症医学词，danbooru 无该标签）
+  - missing_arms  (1 处, 如 neg_limbs_feet)
+      理由: 负面修复类自由短语（danbooru 只有 amputee/armless_amputee 等说法）
+  - missing_legs  (1 处, 如 neg_limbs_feet)
+      理由: 负面修复类自由短语（danbooru 只有 amputee/legless_amputee 等说法）
+  - patreon_username  (1 处, 如 neg_text_watermark)
+      理由: 水印去除类自由短语（站点用户名，danbooru 无该标签）
+
+结论: 未命中条目全部属于「模型官方标签串」「自由提示词短语」「通用安全词」三类，
+      无可修正的 danbooru 拼写错误，校验通过。

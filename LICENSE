@@ -1,0 +1,42 @@
+MIT License
+
+Copyright (c) 2026 Luoury
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---------------------------------------------------------------------------
+注意 / NOTICE
+
+本 MIT 许可仅覆盖本仓库的**源代码**。
+
+1. 标签数据（assets/data/tags_core.json、tags_full.tsv.gz）
+   由 Danbooru 公开标签库（https://danbooru.donmai.us/）与社区整理的中文翻译
+   数据集衍生而来，其版权与许可遵循原始来源。
+
+2. 常驻预设（assets/data/presets.json）
+   整理自 NovelAI 官方文档、NoobAI / Illustrious / Pony Diffusion 模型卡
+   与 Stable Diffusion 社区通用写法，仅作技术参考。
+
+3. 本仓库**不包含任何壁纸图片**。assets/wallpapers/ 里默认使用的初音未来
+   插画版权归各 pixiv 画师所有，未随仓库分发。详见该目录下的 README.md。
+
+4. 「初音未来 / Hatsune Miku」为 Crypton Future Media 的注册商标与角色，
+   本项目的主题配色仅作个人学习用途，与 Crypton 无关联。
+
+5. 打包分发时若使用 PyQt5，需遵守其 GPL 许可；改用 PySide6（LGPL）可规避。

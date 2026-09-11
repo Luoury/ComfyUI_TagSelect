@@ -1,6 +1,6 @@
 # ComfyUI_TagSelect
 
-![version](https://img.shields.io/badge/version-v0.10-39C5BB)
+![version](https://img.shields.io/badge/version-v0.11-39C5BB)
 ![build](https://github.com/Luoury/ComfyUI_TagSelect/actions/workflows/build-windows.yml/badge.svg)
 ![python](https://img.shields.io/badge/python-3.9%2B-2E8BFF)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -148,7 +148,7 @@ Linux / macOS：
 每次构建会依次执行：
 
 1. 检查 `assets/data/` 三个数据文件是否齐全
-2. 跑 `tools/selftest.py`（离屏，53 项断言）
+2. 跑 `tools/selftest.py`（离屏，70 项断言）
 3. `pyinstaller ComfyUI_TagSelect.spec` 打包单文件 exe
 4. 跑 `tools/smoke_test.py` —— 启动 exe 等 14 秒，确认不是秒退
 5. 生成 `SHA256SUMS.txt`，把 exe 与校验和上传到对应 Release
@@ -273,15 +273,32 @@ python tools/build_data.py --input-dir /path/to/data --output-dir assets/data
 
 开发时使用的几张初音未来插画来自 pixiv，版权归各画师所有，不适合在公开仓库里再分发，
 因此 `assets/wallpapers/` 目录是空的（只保留一份 `README.md`）。
-上面截图里的深蓝渐变**就是不带壁纸时的默认背景**，功能完全不受影响。
 
-想换成插画主题：
+没有壁纸时，程序会用 **QPainter 现画一张初音配色的星空渐变背景**（代码生成的，
+没有版权问题）—— 上面截图里的深蓝星空就是它。功能完全不受影响。
 
-1. 把任意图片（`.jpg` / `.jpeg` / `.png` / `.webp` / `.bmp`）放进 `assets/wallpapers/`；
-2. 重启程序，进「设置 → 外观」即可切换，程序会自动识别目录里的所有图片；
-3. 壁纸用 `KeepAspectRatioByExpanding` + 居中裁剪绘制，**任何窗口比例下都铺满、不会留白**。
+### 换成自己的图片
 
-> 自己重新打包 exe 时记得先放图 —— `ComfyUI_TagSelect.spec` 会把整个 `assets/` 一起打进去。
+最简单：打开 **设置 → 外观 → 「添加图片…」**，选一张图，程序会把它复制到用户壁纸目录
+并立刻应用。想批量放图，也可以点「打开壁纸文件夹」把图片丢进去，重启程序即可识别。
+
+用户壁纸目录（**持久保存，重启 exe 不会丢**）：
+
+| 平台 | 路径 |
+| --- | --- |
+| Windows | `%APPDATA%\ComfyUI_TagSelect\wallpapers\` |
+| Linux | `~/.config/ComfyUI_TagSelect/wallpapers/` |
+| macOS | `~/Library/Application Support/ComfyUI_TagSelect/wallpapers/` |
+
+> 便携模式（程序目录下有 `portable.txt`）时是 `<程序目录>\userdata\wallpapers\`。
+
+壁纸用 `KeepAspectRatioByExpanding` + 居中裁剪绘制，**任何窗口比例下都铺满、不会留白**；
+「背景压暗」「背景模糊」两个滑块对默认星空背景同样生效。
+
+> ⚠️ **不要**把图片放进 `assets/wallpapers/` 给打包好的 exe 用 —— 单文件 exe 的
+> `assets/` 是每次启动都会重建的临时解包目录，放进去下次启动就没了。
+> 那个目录只在「源码运行 / 自己重新打包」时有意义（`ComfyUI_TagSelect.spec`
+> 会把整个 `assets/` 打进去，作为内置壁纸）。
 
 ---
 
@@ -325,7 +342,7 @@ ComfyUI_TagSelect/
 ├── docs/                       # 文档截图
 ├── tools/
 │   ├── build_data.py           # 标签数据生成流水线
-│   ├── selftest.py             # 离屏功能自测（53 项断言）
+│   ├── selftest.py             # 离屏功能自测（70 项断言）
 │   ├── smoke_test.py           # 打包产物冒烟测试（启动后检查是否秒退）
 │   ├── version.py              # 输出 __version__，CI 用来推导发布标签
 │   └── screenshot.py           # 开发用离屏截图校对工具
@@ -360,11 +377,20 @@ A：重新生成数据前，改 `tools/build_data.py` 里对应的分类词表�
 **Q：想要更多标签？**
 A：调大 `tools/build_data.py` 里的 `CORE_CAPS`（每个分类的核心标签上限），重新生成即可。
 
-**Q：界面背景是纯色的，没有插画？**
-A：这是正常的 —— 仓库不附带壁纸。把自己的图片放进 `assets/wallpapers/` 就能换，详见 [壁纸](#壁纸)。
+**Q：界面背景是纯色 / 星空，没有插画？**
+A：这是正常的 —— 仓库不附带壁纸，默认用程序生成的星空背景。
+在「设置 → 外观」点「添加图片…」换成自己的图即可，详见 [壁纸](#壁纸)。
+
+**Q：我把图片放到 exe 旁边的 `assets\wallpapers\` 里，程序却认不出来？**
+A：单文件 exe 的 `assets\` 是**每次启动都会重建的临时解包目录**（PyInstaller 的
+`sys._MEIPASS`），你放进去的文件下次启动就没了，程序也不会去那里找你新增的图。
+请改用「设置 → 外观 → 打开壁纸文件夹」（`%APPDATA%\ComfyUI_TagSelect\wallpapers\`）
+或直接点「添加图片…」。
+> v0.10 的 exe 有这个问题（设置里存的还是临时目录的绝对路径，重启必然失效），
+> v0.11 已修复：壁纸改成用 `user:xxx.jpg` 这样的稳定标识记录。
 
 **Q：怎么确认功能都正常？**
-A：跑 `python tools/selftest.py`（离屏，不需要显示器），会执行 53 项断言并打印结果。
+A：跑 `python tools/selftest.py`（离屏，不需要显示器），会执行 70 项断言并打印结果。
 
 ---
 

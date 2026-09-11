@@ -555,6 +555,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.custom_page.tagClicked.connect(self.toggle_tag)
 
         self.settings_page = pages_mod.SettingsPage(self.db, self.user, self.stack, self._scale)
+        self.settings_page.toast.connect(
+            lambda title, sub, icon: self.toast.show_message(title, sub, icon))
         self.about_page = pages_mod.AboutPage(self.db, self.user, self.stack, self._scale)
 
         for page in (self.library, self.presets_page, self.custom_page,
@@ -623,17 +625,26 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # ------------------------------------------------------------ 壁纸 / 设置
     def _apply_wallpaper_from_settings(self) -> None:
-        path = str(self.user.get("wallpaper", "") or "")
-        if path and self.bg.set_wallpaper(path):
+        """按设置里的**稳定 key** 解析壁纸。
+
+        这里以前存的是绝对路径，而单文件 exe 的资源目录是每次启动都会重建的
+        临时目录（sys._MEIPASS），所以路径必然失效 —— 现在改成
+        user:xxx.jpg / builtin:xxx.jpg 这种 key，解析不到就回落到默认背景。
+        """
+        key = str(self.user.get("wallpaper", "") or "")
+        path = resources.resolve_wallpaper(key)
+        if path is not None and self.bg.set_wallpaper(path):
             return
-        wallpapers = resources.wallpaper_files()
-        if wallpapers:
-            self.bg.set_wallpaper(wallpapers[0][1])
+        if key:
+            # key 失效（比如用户把图片删了），清掉设置，避免每次启动都白找一遍
+            self.user.set("wallpaper", resources.KEY_DEFAULT)
+        self.bg.clear_wallpaper()
 
     def _on_setting(self, key: str) -> None:
         if key == "wallpaper":
             self._apply_wallpaper_from_settings()
-            self.settings_page.refresh_wallpaper()
+            if hasattr(self, "settings_page"):
+                self.settings_page.refresh_wallpaper()
         elif key == "scrim":
             self.bg.set_scrim(float(self.user.get("scrim", 0.52)))
         elif key == "blur":

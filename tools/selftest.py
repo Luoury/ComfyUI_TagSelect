@@ -93,14 +93,101 @@ def main() -> int:
     check("开模糊后仍铺满", bg._cache is not None and bg._cache.width() == 1234
           and bg._cache.height() == 567)
 
-    # 兜底：没有壁纸时也必须填满
+    # 兜底：没有壁纸时必须用程序生成的默认背景填满
     bg2 = BackgroundWidget(None, None, scrim=0.0, blur=0.0)
     bg2.resize(900, 400)
     bg2._ensure_cache()
-    check("无壁纸时也能填满（兜底渐变）", bg2._cache is None)
-    # 仓库不带壁纸时，wallpaper_files() 必须安全返回空列表
+    check("无壁纸时用默认背景且铺满",
+          bg2._cache is not None and bg2._cache.width() == 900
+          and bg2._cache.height() == 400)
+    check("无壁纸时 has_wallpaper() 为 False", bg2.has_wallpaper() is False)
     check("wallpaper_files() 返回列表", isinstance(resources.wallpaper_files(), list),
           f"{len(resources.wallpaper_files())} 张")
+
+    # 默认背景不能是纯色，否则外观滑块看起来"没反应"
+    probe_img = bg2._cache.toImage()
+    sampled = {probe_img.pixelColor(x, y).name()
+               for x in range(0, 900, 45) for y in range(0, 400, 40)}
+    check("默认背景是渐变/星空而非纯色", len(sampled) > 5, f"{len(sampled)} 种颜色")
+
+    def _avg_lightness(widget) -> float:
+        pm = QtGui.QPixmap(widget.size())
+        pm.fill(QtCore.Qt.transparent)
+        widget.render(pm)
+        img = pm.toImage()
+        total, n = 0, 0
+        for x in range(0, img.width(), 20):
+            for y in range(0, img.height(), 20):
+                total += img.pixelColor(x, y).lightness()
+                n += 1
+        return total / max(1, n)
+
+    bg2.set_scrim(0.0)
+    light_plain = _avg_lightness(bg2)
+    bg2.set_scrim(0.8)
+    light_dark = _avg_lightness(bg2)
+    check("背景压暗对默认背景也生效", light_dark < light_plain - 8,
+          f"{light_plain:.1f} -> {light_dark:.1f}")
+    bg2.set_scrim(0.0)
+
+    # ---------------- 壁纸持久化（回归：单文件 exe 临时目录问题）----------------
+    print("\n[壁纸持久化]")
+    udir = resources.user_data_dir()
+    wdir = resources.user_wallpaper_dir()
+    check("用户壁纸目录在用户数据目录内",
+          wdir == udir / "wallpapers" and udir in wdir.parents, str(wdir))
+    check("用户壁纸目录不在打包资源目录内",
+          resources.BASE_DIR not in wdir.parents and wdir != resources.BASE_DIR,
+          f"用户目录={wdir}")
+
+    imported = resources.import_wallpaper(probe)
+    check("导入壁纸成功", imported is not None and imported.path.exists(),
+          str(imported.path) if imported else "None")
+    check("导入的壁纸用 user: 前缀的稳定 key",
+          imported is not None and imported.key.startswith("user:"),
+          imported.key if imported else "")
+    check("导入的壁纸落在用户数据目录内",
+          imported is not None and udir in imported.path.parents)
+    check("resolve_wallpaper 能解析 user: key",
+          imported is not None and resources.resolve_wallpaper(imported.key) == imported.path)
+    check("resolve_wallpaper 对不存在的 key 返回 None",
+          resources.resolve_wallpaper("user:__not_here__.png") is None)
+    check("resolve_wallpaper 对空 key 返回 None", resources.resolve_wallpaper("") is None)
+    check("wallpaper_files() 能列出导入的壁纸",
+          imported is not None
+          and any(w.key == imported.key for w in resources.wallpaper_files()))
+
+    # 模拟"关掉再打开"：换一个 UserData / MainWindow 重新读磁盘上的设置
+    user.set("wallpaper", imported.key)
+    app.processEvents()
+    restarted_user = UserData()
+    check("重启后设置里的 wallpaper key 还在",
+          restarted_user.get("wallpaper") == imported.key,
+          str(restarted_user.get("wallpaper")))
+    win2 = MainWindow(db, restarted_user)
+    app.processEvents()
+    check("重启后背景确实用上了这张壁纸",
+          win2.bg.has_wallpaper() and win2.bg.wallpaper_path() == imported.path,
+          str(win2.bg.wallpaper_path()))
+    win2.close()
+    win2.deleteLater()
+    app.processEvents()
+
+    # 图片被删掉时，应当回落到默认背景并清掉失效的 key，而不是每次启动都白找
+    imported.path.unlink()
+    win3 = MainWindow(db, UserData())
+    app.processEvents()
+    check("壁纸文件被删后回落到默认背景", win3.bg.has_wallpaper() is False)
+    check("失效的 wallpaper key 被清理掉",
+          str(UserData().get("wallpaper") or "") == "", repr(UserData().get("wallpaper")))
+    win3.close()
+    win3.deleteLater()
+    app.processEvents()
+
+    # 默认背景的 key 也要能正常解析成"不用壁纸"
+    user.set("wallpaper", resources.KEY_DEFAULT)
+    check("空 key 表示使用默认背景",
+          resources.resolve_wallpaper(resources.KEY_DEFAULT) is None)
 
     # ---------------- 点击加入 / 移出 ----------------
     print("\n[选择行为]")

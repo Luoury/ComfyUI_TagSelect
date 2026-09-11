@@ -6,11 +6,13 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 from ..qtcompat import QtCore, QtGui, QtWidgets, Signal, qsin
 from .. import __author__, __version__
 from .. import data_store, icons, miku_art, resources, theme
 from ..user_data import COPY_FORMATS
+from .background import build_default_background
 from .common import GlassCard, IconButton, PillButton, ToggleSwitch, VScroll
 from .tag_canvas import TagScroll
 
@@ -407,23 +409,39 @@ class CustomTagsPage(PageBase):
 
 # ==================================================================== 设置
 class WallpaperThumb(QtWidgets.QAbstractButton):
-    def __init__(self, label: str, path, parent=None) -> None:
+    """壁纸缩略图。
+
+    key 是稳定标识（``user:xxx.jpg`` / ``builtin:xxx.jpg`` / 空串=默认背景），
+    设置里存的就是它 —— 单文件 exe 每次启动临时目录都不同，存绝对路径会失效。
+    """
+
+    def __init__(self, label: str, key: str, path=None, parent=None,
+                 badge: str = "", tooltip: str = "") -> None:
         super().__init__(parent)
         self.label = label
+        self.key = key
         self.path = path
         self._active = False
         self._hover = False
+        self._badge = badge
         self.setCheckable(False)
         self.setCursor(QtCore.Qt.PointingHandCursor)
         self.setFixedSize(168, 108)
-        self.setToolTip(str(path))
-        pm = QtGui.QPixmap(str(path))
-        self._pm = pm.scaled(self.width(), 82, QtCore.Qt.KeepAspectRatioByExpanding,
-                             QtCore.Qt.SmoothTransformation) if not pm.isNull() else pm
+        self.setToolTip(tooltip or (str(path) if path else "程序生成的初音配色星空背景"))
+
+        img_w, img_h = self.width() - 10, 82
+        if path is None:
+            self._pm = build_default_background(img_w, img_h)
+        else:
+            pm = QtGui.QPixmap(str(path))
+            self._pm = (pm.scaled(self.width(), img_h, QtCore.Qt.KeepAspectRatioByExpanding,
+                                  QtCore.Qt.SmoothTransformation)
+                        if not pm.isNull() else pm)
 
     def set_active(self, value: bool) -> None:
-        self._active = value
-        self.update()
+        if self._active != value:
+            self._active = value
+            self.update()
 
     def enterEvent(self, event) -> None:  # noqa: N802
         self._hover = True
@@ -449,9 +467,8 @@ class WallpaperThumb(QtWidgets.QAbstractButton):
         if not self._pm.isNull():
             sx = max(0, (self._pm.width() - int(img_rect.width())) // 2)
             sy = max(0, (self._pm.height() - int(img_rect.height())) // 2)
-            p.drawPixmap(img_rect.toRect(), self._pm, QtCore.QRect(sx, sy,
-                                                                   int(img_rect.width()),
-                                                                   int(img_rect.height())))
+            p.drawPixmap(img_rect.toRect(), self._pm,
+                         QtCore.QRect(sx, sy, int(img_rect.width()), int(img_rect.height())))
         p.restore()
 
         if self._active:
@@ -460,6 +477,16 @@ class WallpaperThumb(QtWidgets.QAbstractButton):
             p.drawRoundedRect(img_rect, 8, 8)
             icons.paint_glyph(p, "check", QtCore.QRectF(img_rect.right() - 26,
                                                         img_rect.top() + 6, 18, 18), "#FFFFFF")
+        if self._badge:
+            w = 34
+            badge_rect = QtCore.QRectF(img_rect.left() + 6, img_rect.top() + 6, w, 15)
+            p.setPen(QtCore.Qt.NoPen)
+            p.setBrush(QtGui.QColor(46, 139, 255, 220))
+            p.drawRoundedRect(badge_rect, 7, 7)
+            p.setFont(theme.font(7.4, 700))
+            p.setPen(QtGui.QColor("#FFFFFF"))
+            p.drawText(badge_rect, QtCore.Qt.AlignCenter, self._badge)
+
         border = theme.MIKU_CYAN if self._active else (
             theme.CHIP_BORDER_HOVER if self._hover else theme.CHIP_BORDER)
         p.setBrush(QtCore.Qt.NoBrush)
@@ -474,6 +501,9 @@ class WallpaperThumb(QtWidgets.QAbstractButton):
 
 
 class SettingsPage(PageBase):
+    # (标题, 副标题, 图标) —— 由主窗口接上 Toast
+    toast = Signal(str, str, str)
+
     def __init__(self, db, user, parent=None, scale: float = 1.0) -> None:
         super().__init__("设置", "所有改动即时生效并自动保存。", parent, scale)
         self.db = db
@@ -489,23 +519,46 @@ class SettingsPage(PageBase):
         self.wall_lay.setContentsMargins(0, 0, 0, 0)
         self.wall_lay.setSpacing(10)
         wallpapers = resources.wallpaper_files()
-        for i, (label, path) in enumerate(wallpapers):
-            thumb = WallpaperThumb(label, path, self.wall_box)
-            thumb.clicked.connect(lambda _=False, p=path: self._set_wallpaper(p))
+        for i, item in enumerate(wallpapers):
+            badge = "我的" if item.user else ""
+            thumb = WallpaperThumb(item.label, item.key, item.path, self.wall_box,
+                                   badge=badge)
+            thumb.clicked.connect(lambda _=False, k=item.key: self._set_wallpaper(k))
             self.wall_lay.addWidget(thumb, i // 4, i % 4)
             self._thumbs.append(thumb)
         if not wallpapers:
             empty = QtWidgets.QLabel(
-                "还没有壁纸。把你喜欢的图片（jpg / png / webp / bmp）放进\n"
-                f"{resources.WALLPAPER_DIR}\n"
-                "再重启程序即可自动识别；在此之前会使用初音配色的渐变背景。", self.wall_box)
+                "还没有添加壁纸。点下面的「添加图片…」，把图片复制到\n"
+                f"{resources.user_wallpaper_dir()}\n"
+                "就会出现在这里 —— 这个目录是持久的，重启 exe 不会丢。\n"
+                "（软件不附带插画壁纸，默认使用程序生成的初音配色星空背景。）",
+                self.wall_box)
             empty.setFont(theme.font(8.8, 400))
             empty.setWordWrap(True)
             empty.setStyleSheet(
                 "color: #BFE9FF; background: rgba(46,139,255,0.14);"
                 "border: 1px dashed rgba(140,220,255,0.32); border-radius: 10px; padding: 12px;")
             self.wall_lay.addWidget(empty, 0, 0)
+
+        wall_tools = QtWidgets.QHBoxLayout()
+        wall_tools.setSpacing(8)
+        btn_add = PillButton("添加图片…", "plus", "primary", box, scale=0.9)
+        btn_add.setToolTip("从磁盘挑选图片，复制到用户壁纸目录")
+        btn_add.clicked.connect(self._import_wallpapers)
+        wall_tools.addWidget(btn_add)
+
+        btn_folder = PillButton("打开壁纸文件夹", "download", "ghost", box, scale=0.9)
+        btn_folder.setToolTip(str(resources.user_wallpaper_dir()))
+        btn_folder.clicked.connect(self._open_wallpaper_dir)
+        wall_tools.addWidget(btn_folder)
+
+        btn_reset = PillButton("用默认背景", "image", "ghost", box, scale=0.9)
+        btn_reset.setToolTip("回到程序生成的初音配色星空背景")
+        btn_reset.clicked.connect(lambda: self._set_wallpaper(resources.KEY_DEFAULT))
+        wall_tools.addWidget(btn_reset)
+        wall_tools.addStretch(1)
         lay.addWidget(self.wall_box)
+        lay.addLayout(wall_tools)
 
         self.scrim = QtWidgets.QSlider(QtCore.Qt.Horizontal, box)
         self.scrim.setRange(0, 85)
@@ -612,14 +665,79 @@ class SettingsPage(PageBase):
         self.body.addStretch(1)
 
     # ------------------------------------------------------------
-    def _set_wallpaper(self, path) -> None:
-        self.user.set("wallpaper", str(path))
+    def _set_wallpaper(self, key: str) -> None:
+        """key 是稳定标识（user:xxx / builtin:xxx / 空串=默认背景）。"""
+        self.user.set("wallpaper", key)
         self.refresh_wallpaper()
 
-    def refresh_wallpaper(self) -> None:
+    def refresh_wallpaper(self, allow_reload: bool = True) -> None:
+        """同步缩略图的选中状态。
+
+        注意：**不能**只拿手里的 _thumbs 判断 key 是否有效 —— 刚导入的图片
+        还没进列表，会被误判成"失效"然后把设置清掉（这个 bug 真发生过）。
+        所以先重建一次缩略图再判断，只有确实不存在时才回落到默认背景。
+        """
         current = str(self.user.get("wallpaper", "") or "")
+        if current and current not in {t.key for t in self._thumbs}:
+            if allow_reload:
+                self.reload_wallpapers()
+                return
+            self.user.set("wallpaper", resources.KEY_DEFAULT)
+            current = resources.KEY_DEFAULT
         for thumb in self._thumbs:
-            thumb.set_active(str(thumb.path) == current)
+            thumb.set_active(thumb.key == current)
+
+    def reload_wallpapers(self) -> None:
+        """重新扫描壁纸目录并重建缩略图（导入新图片后调用）。"""
+        while self.wall_lay.count():
+            item = self.wall_lay.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.hide()
+                w.setParent(None)
+                w.deleteLater()
+        self._thumbs.clear()
+
+        for i, item in enumerate(resources.wallpaper_files()):
+            badge = "我的" if item.user else ""
+            thumb = WallpaperThumb(item.label, item.key, item.path, self.wall_box, badge=badge)
+            thumb.clicked.connect(lambda _=False, k=item.key: self._set_wallpaper(k))
+            self.wall_lay.addWidget(thumb, i // 4, i % 4)
+            self._thumbs.append(thumb)
+        if not self._thumbs:
+            empty = QtWidgets.QLabel(
+                "还没有添加壁纸，点下面的「添加图片…」就能加进来。", self.wall_box)
+            empty.setFont(theme.font(8.8, 400))
+            empty.setWordWrap(True)
+            empty.setStyleSheet(
+                "color: #BFE9FF; background: rgba(46,139,255,0.14);"
+                "border: 1px dashed rgba(140,220,255,0.32); border-radius: 10px; padding: 12px;")
+            self.wall_lay.addWidget(empty, 0, 0)
+        self.refresh_wallpaper(allow_reload=False)
+
+    def _import_wallpapers(self) -> None:
+        paths, _ = QtWidgets.QFileDialog.getOpenFileNames(
+            self, "选择壁纸图片", str(Path.home()),
+            "图片 (*.jpg *.jpeg *.png *.webp *.bmp);;所有文件 (*)")
+        if not paths:
+            return
+        imported: list[str] = []
+        for raw in paths:
+            item = resources.import_wallpaper(Path(raw))
+            if item is not None:
+                imported.append(item.label)
+        if not imported:
+            self._toast.emit("没有导入任何图片", "格式不支持或复制失败", "info")
+            return
+        self.reload_wallpapers()
+        # 导入后直接应用第一张，用户马上能看到效果
+        first = next((t for t in self._thumbs if t.label == imported[0]), None)
+        if first is not None:
+            self._set_wallpaper(first.key)
+        self._toast.emit(f"已导入 {len(imported)} 张壁纸", "、".join(imported[:3]), "image")
+
+    def _open_wallpaper_dir(self) -> None:
+        self._open_path(str(resources.user_wallpaper_dir()))
 
     def _format_changed(self, index: int) -> None:
         self.user.set("copy_format", self.fmt.itemData(index))
@@ -630,8 +748,7 @@ class SettingsPage(PageBase):
         demo = ["1girl", "long_hair", "blue_eyes", "school_uniform"]
         self.preview.setText(format_tags(demo, self.user.get("copy_format", "comma")))
 
-    def _open_dir(self) -> None:
-        path = str(self.user.dir)
+    def _open_path(self, path: str) -> None:
         try:
             if sys.platform.startswith("win"):
                 os.startfile(path)  # type: ignore[attr-defined]
@@ -641,6 +758,9 @@ class SettingsPage(PageBase):
                 subprocess.Popen(["xdg-open", path])
         except Exception:
             pass
+
+    def _open_dir(self) -> None:
+        self._open_path(str(self.user.dir))
 
     def _reset(self) -> None:
         from ..user_data import DEFAULT_SETTINGS

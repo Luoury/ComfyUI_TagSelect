@@ -13,6 +13,7 @@ from .. import __author__, __version__
 from .. import data_store, icons, miku_art, resources, theme
 from ..user_data import COPY_FORMATS
 from .background import build_default_background
+from .miku_sprite import MikuSprite
 from .common import GlassCard, IconButton, PillButton, ToggleSwitch, VScroll
 from .tag_canvas import TagScroll
 
@@ -580,6 +581,26 @@ class SettingsPage(PageBase):
         self.font_scale.setFixedWidth(190)
         self.font_scale.valueChanged.connect(lambda v: self.user.set("font_scale", v / 100.0))
         lay.addWidget(row("界面缩放", self.font_scale, "整体放大标签与文字。", box))
+
+        self.acrylic = QtWidgets.QSlider(QtCore.Qt.Horizontal, box)
+        self.acrylic.setRange(0, 100)
+        self.acrylic.setValue(int(float(self.user.get("acrylic", 0.55)) * 100))
+        self.acrylic.setFixedWidth(190)
+        self.acrylic.valueChanged.connect(lambda v: self.user.set("acrylic", v / 100.0))
+        lay.addWidget(row("亚克力质感", self.acrylic,
+                          "面板的磨砂颗粒感与通透度。0 = 清爽玻璃，100 = 明显亚克力。", box))
+
+        self.bg_motion = ToggleSwitch(box, checked=bool(self.user.get("bg_motion", True)))
+        self.bg_motion.toggled.connect(lambda v: self.user.set("bg_motion", bool(v)))
+        lay.addWidget(row("背景动效", self.bg_motion, "背景里缓慢游走的光晕与上浮星尘。", box))
+
+        self.bg_motion_level = QtWidgets.QSlider(QtCore.Qt.Horizontal, box)
+        self.bg_motion_level.setRange(0, 150)
+        self.bg_motion_level.setValue(int(float(self.user.get("bg_motion_intensity", 1.0)) * 100))
+        self.bg_motion_level.setFixedWidth(190)
+        self.bg_motion_level.valueChanged.connect(
+            lambda v: self.user.set("bg_motion_intensity", v / 100.0))
+        lay.addWidget(row("动效强度", self.bg_motion_level, "调低会更含蓄。", box))
         self.body.addWidget(box)
 
         # ---- 标签显示
@@ -777,11 +798,18 @@ class SettingsPage(PageBase):
         self.confirm_clear.setChecked(bool(DEFAULT_SETTINGS["confirm_clear"]))
         self.fmt.setCurrentIndex(max(0, self.fmt.findData(DEFAULT_SETTINGS["copy_format"])))
         self.chip_mode.setCurrentIndex(max(0, self.chip_mode.findData(DEFAULT_SETTINGS["chip_mode"])))
+        self.acrylic.setValue(int(DEFAULT_SETTINGS["acrylic"] * 100))
+        self.bg_motion.setChecked(bool(DEFAULT_SETTINGS["bg_motion"]))
+        self.bg_motion_level.setValue(int(DEFAULT_SETTINGS["bg_motion_intensity"] * 100))
         self.refresh_wallpaper()
 
 
 # ==================================================================== 关于
 class AboutPage(PageBase):
+    """关于页。点页面上的 MIKU 也会下葱雨。"""
+
+    mikuClicked = Signal()
+
     def __init__(self, db, user, parent=None, scale: float = 1.0) -> None:
         super().__init__("关于", "ComfyUI_TagSelect · 简约的 AI 生图标签选择器", parent, scale)
         self.db = db
@@ -790,7 +818,9 @@ class AboutPage(PageBase):
         hero, hl = card()
         hero_lay = QtWidgets.QHBoxLayout()
         hero_lay.setSpacing(16)
-        art = _ChibiArt(hero, 92)
+        art = MikuSprite(hero, size=96)
+        art.clicked.connect(self.mikuClicked.emit)
+        self.miku = art
         hero_lay.addWidget(art, 0, QtCore.Qt.AlignTop)
         text = QtWidgets.QVBoxLayout()
         text.setSpacing(6)
@@ -848,27 +878,6 @@ class AboutPage(PageBase):
         lay4.addWidget(egg)
         self.body.addWidget(box4)
         self.body.addStretch(1)
-
-
-class _ChibiArt(QtWidgets.QWidget):
-    def __init__(self, parent=None, size: int = 92) -> None:
-        super().__init__(parent)
-        self.setFixedSize(size, size)
-        self._t = 0.0
-        self._timer = QtCore.QTimer(self)
-        self._timer.timeout.connect(self._tick)
-        self._timer.start(60)
-
-    def _tick(self) -> None:
-        self._t += 0.07
-        self.update()
-
-    def paintEvent(self, event) -> None:  # noqa: N802
-        p = QtGui.QPainter(self)
-        p.setRenderHint(QtGui.QPainter.Antialiasing, True)
-        miku_art.draw_chibi(p, QtCore.QRectF(0, 0, self.width(), self.height()),
-                            sway=0.8 * qsin(self._t))
-        p.end()
 
 
 def _step_row(num: str, title: str, desc: str, parent) -> QtWidgets.QWidget:

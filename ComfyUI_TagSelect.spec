@@ -19,6 +19,7 @@ datas = [
     (str(ROOT / "assets" / "wallpapers"), "assets/wallpapers"),
     (str(ROOT / "assets" / "icons"), "assets/icons"),
     (str(ROOT / "assets" / "data"), "assets/data"),
+    (str(ROOT / "assets" / "miku"), "assets/miku"),      # MIKU 立绘
 ]
 
 hiddenimports = [

@@ -99,6 +99,8 @@ def _paint(name: str, p: QtGui.QPainter, s: float, color: str) -> None:
         p.drawPolyline([QtCore.QPointF(14.6, 5.6), QtCore.QPointF(8.0, 12.0), QtCore.QPointF(14.6, 18.4)])
     elif name == "chevron_down":
         p.drawPolyline([QtCore.QPointF(5.6, 9.4), QtCore.QPointF(12.0, 16.0), QtCore.QPointF(18.4, 9.4)])
+    elif name == "chevron_up":
+        p.drawPolyline([QtCore.QPointF(5.6, 14.6), QtCore.QPointF(12.0, 8.0), QtCore.QPointF(18.4, 14.6)])
     elif name == "image":
         p.drawRoundedRect(QtCore.QRectF(3.4, 5.0, 17.2, 14.0), 2.6, 2.6)
         p.drawEllipse(QtCore.QRectF(6.6, 8.0, 3.0, 3.0))

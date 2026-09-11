@@ -8,8 +8,10 @@ from . import data_store, icons, resources, theme
 from .data_store import Tag, TagDatabase
 from .user_data import UserData
 from .widgets import pages as pages_mod
-from .widgets.background import BackgroundWidget
-from .widgets.common import GlassCard, IconButton, PillButton, ToggleSwitch, Toast, VScroll
+from .widgets.background import BackgroundFX, BackgroundWidget
+from .widgets.common import (GlassCard, IconButton, PillButton, ToggleSwitch,
+                             Toast, VScroll)
+from .widgets.flow_layout import FlowLayout
 from .widgets.leek_rain import LeekRain
 from .widgets.sidebar import Sidebar
 from .widgets.tag_canvas import TagScroll
@@ -107,32 +109,67 @@ class _CatPill(QtWidgets.QAbstractButton):
 class CategoryPills(QtWidgets.QScrollArea):
     changed = Signal(str)
 
+    COLLAPSED_H = 50
+    EXPANDED_MAX_H = 196
+
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.setWidgetResizable(True)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        # 分类有 20 多个，一屏放不下，保留一条细横向滚动条作为可滚动的提示
+        # 分类有 20 多个，一屏放不下：收起时横向滚动，展开后换行铺开
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.setFixedHeight(50)
+        self.setFixedHeight(self.COLLAPSED_H)
         self.viewport().setAutoFillBackground(False)
         self.setStyleSheet("background: transparent;")
         self._holder = QtWidgets.QWidget()
         self._holder.setStyleSheet("background: transparent;")
-        self._lay = QtWidgets.QHBoxLayout(self._holder)
+        self._lay = FlowLayout(self._holder, margin=0, h_spacing=7, v_spacing=7, wrap=False)
         self._lay.setContentsMargins(0, 2, 0, 6)
-        self._lay.setSpacing(7)
-        self._lay.addStretch(1)
         self.setWidget(self._holder)
         self._pills: dict[str, _CatPill] = {}
         self._current = "all"
+        self._expanded = False
+
+    # ------------------------------------------------------------ 展开
+    def set_expanded(self, value: bool) -> None:
+        self._expanded = bool(value)
+        self._lay.set_wrap(self._expanded)
+        if self._expanded:
+            self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+            self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        else:
+            self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+            self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self._holder.updateGeometry()
+        self._lay.invalidate()
+        QtCore.QTimer.singleShot(0, self._sync_height)
+
+    def is_expanded(self) -> bool:
+        return self._expanded
+
+    def _sync_height(self) -> None:
+        if not self._expanded:
+            self.setFixedHeight(self.COLLAPSED_H)
+            return
+        width = max(80, self.viewport().width())
+        needed = self._lay.heightForWidth(width) + 6
+        self.setFixedHeight(int(max(self.COLLAPSED_H, min(needed, self.EXPANDED_MAX_H))))
+
+    def resizeEvent(self, event) -> None:  # noqa: N802
+        super().resizeEvent(event)
+        if self._expanded:
+            self._sync_height()
 
     def wheelEvent(self, event) -> None:  # noqa: N802
-        bar = self.horizontalScrollBar()
+        if self._expanded:
+            bar = self.verticalScrollBar()
+        else:
+            bar = self.horizontalScrollBar()
         bar.setValue(bar.value() - event.angleDelta().y())
 
     def set_categories(self, items: list[tuple[str, str, int]]) -> None:
-        while self._lay.count() > 1:
+        while self._lay.count():
             item = self._lay.takeAt(0)
             w = item.widget()
             if w is not None:
@@ -144,9 +181,12 @@ class CategoryPills(QtWidgets.QScrollArea):
         for cid, name, count in items:
             pill = _CatPill(cid, name, count, self._holder)
             pill.clicked.connect(lambda _=False, c=cid: self.select(c))
-            self._lay.insertWidget(self._lay.count() - 1, pill)
+            self._lay.addWidget(pill)
             self._pills[cid] = pill
+        self._holder.updateGeometry()
+        self._lay.invalidate()
         self.horizontalScrollBar().setValue(0)
+        QtCore.QTimer.singleShot(0, self._sync_height)
         self.select(self._current if self._current in self._pills else "all", emit=False)
 
     def select(self, cid: str, emit: bool = True) -> None:
@@ -347,9 +387,16 @@ class LibraryPage(QtWidgets.QWidget):
         play.setContentsMargins(12, 10, 12, 12)
         play.setSpacing(8)
 
+        pill_row = QtWidgets.QHBoxLayout()
+        pill_row.setSpacing(6)
         self.pills = CategoryPills(self.panel)
         self.pills.changed.connect(self._on_category)
-        play.addWidget(self.pills)
+        pill_row.addWidget(self.pills, 1)
+
+        self.btn_expand = IconButton("chevron_down", "展开全部分类", "ghost", self.panel, size=30)
+        self.btn_expand.clicked.connect(self._toggle_pills)
+        pill_row.addWidget(self.btn_expand, 0, QtCore.Qt.AlignTop)
+        play.addLayout(pill_row)
 
         info = QtWidgets.QHBoxLayout()
         info.setContentsMargins(4, 0, 4, 0)
@@ -429,6 +476,12 @@ class LibraryPage(QtWidgets.QWidget):
     def _on_category(self, cid: str) -> None:
         self.categoryChanged.emit(cid)
 
+    def _toggle_pills(self) -> None:
+        expand = not self.pills.is_expanded()
+        self.pills.set_expanded(expand)
+        self.btn_expand.set_icon_name("chevron_up" if expand else "chevron_down")
+        self.btn_expand.setToolTip("收起分类" if expand else "展开全部分类")
+
     categoryChanged = Signal(str)
 
     def _context_menu(self, tag: Tag, pos: QtCore.QPoint) -> None:
@@ -476,6 +529,16 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self._apply_wallpaper_from_settings()
         self.setCentralWidget(self.bg)
+
+        # ---- 背景动效层：夹在壁纸和界面之间，只重绘自己
+        theme.set_acrylic(float(user.get("acrylic", 0.55)))
+        self.fx = BackgroundFX(
+            self.bg,
+            enabled=bool(user.get("bg_motion", True)),
+            intensity=float(user.get("bg_motion_intensity", 1.0)),
+        )
+        self.fx.setGeometry(self.bg.rect())
+        self.fx.lower()
 
         root = QtWidgets.QHBoxLayout(self.bg)
         root.setContentsMargins(0, 0, 0, 0)
@@ -528,6 +591,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # ---- 已选标签框（永远在最上面）
         self.selected = SelectedBar(content, self.user, scale=self._scale)
+        self.selected.changed.connect(self._on_selected_changed)
         self.selected.copyRequested.connect(self.copy_all)
         self.selected.exportRequested.connect(self.export_tags)
         self.selected.saveRequested.connect(self.save_current_as_preset)
@@ -558,6 +622,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings_page.toast.connect(
             lambda title, sub, icon: self.toast.show_message(title, sub, icon))
         self.about_page = pages_mod.AboutPage(self.db, self.user, self.stack, self._scale)
+        self.about_page.mikuClicked.connect(self._miku_egg)
 
         for page in (self.library, self.presets_page, self.custom_page,
                      self.settings_page, self.about_page):
@@ -620,6 +685,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def resizeEvent(self, event) -> None:  # noqa: N802
         super().resizeEvent(event)
+        if hasattr(self, "fx"):
+            self.fx.setGeometry(self.bg.rect())
         self.toast.raise_()
         self.leek_rain.raise_()
 
@@ -651,8 +718,24 @@ class MainWindow(QtWidgets.QMainWindow):
             self.bg.set_blur(float(self.user.get("blur", 0.0)))
         elif key == "r18":
             self._on_r18(bool(self.user.get("r18", False)))
+        elif key == "acrylic":
+            self._apply_acrylic()
+        elif key == "bg_motion":
+            self.fx.set_enabled(bool(self.user.get("bg_motion", True)))
+        elif key == "bg_motion_intensity":
+            self.fx.set_intensity(float(self.user.get("bg_motion_intensity", 1.0)))
         elif key in ("chip_mode", "show_counts", "font_scale"):
             self._apply_visual_settings()
+
+    def _apply_acrylic(self) -> None:
+        """亚克力强度是全局的，改完把所有制品质感的卡片重绘一遍。"""
+        theme.set_acrylic(float(self.user.get("acrylic", 0.55)))
+        if hasattr(self, "sidebar"):
+            self.sidebar.update()
+        for widget in self.findChildren(QtWidgets.QWidget):
+            if isinstance(widget, (GlassCard, SelectedBar)):
+                widget.update()
+        self.bg.update()
 
     def _apply_visual_settings(self) -> None:
         self._scale = float(self.user.get("font_scale", 1.0))
@@ -729,12 +812,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # ------------------------------------------------------------ 选择
     def toggle_tag(self, tag: Tag) -> None:
-        if tag.en in self._selected:
-            del self._selected[tag.en]
-            self.selected.remove(tag)
-        else:
-            self._selected[tag.en] = tag
-            self.selected.add(tag)
+        # 交给 SelectedBar 统一增删；它会 emit changed，由 _on_selected_changed 回写 _selected
+        self.selected.toggle(tag)
+
+    def _on_selected_changed(self) -> None:
+        """以选择框为准回写 _selected，保证点 × 删除时网格里的蓝色也跟着消失。"""
+        self._selected = {t.en: t for t in self.selected.tags()}
         self._sync_selection()
 
     def _sync_selection(self) -> None:
@@ -911,6 +994,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def _miku_egg(self) -> None:
         self.leek_rain.setGeometry(self.bg.rect())
         self.leek_rain.start(7200, 30)
+        for sprite in (self.sidebar.chibi, getattr(self.about_page, "miku", None)):
+            if sprite is not None:
+                sprite.play_rain(7200)
         self.toast.show_message("ミクだよ♪  39!", "大葱雨来啦 🌱  (´∀｀)♡", "note", 2600)
 
     # ------------------------------------------------------------ 快捷键

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .qtcompat import QtGui
+from .qtcompat import QtCore, QtGui
 
 # ---------------------------------------------------------------- 配色
 MIKU_CYAN = "#39C5BB"      # 初音未来官方应援色
@@ -201,3 +201,45 @@ QMessageBox QPushButton:hover, QDialog QPushButton:hover {{ background: {MIKU_BL
 
 QSplitter::handle {{ background: transparent; }}
 """
+
+
+# ---------------------------------------------------------------- 亚克力质感
+# 0.0 = 清爽玻璃，1.0 = 明显磨砂亚克力
+_ACRYLIC = 0.55
+_NOISE_CACHE: dict[int, QtGui.QPixmap] = {}
+
+
+def set_acrylic(value: float) -> None:
+    global _ACRYLIC
+    _ACRYLIC = max(0.0, min(1.0, float(value)))
+
+
+def acrylic() -> float:
+    return _ACRYLIC
+
+
+def noise_pixmap(size: int = 96) -> QtGui.QPixmap:
+    """生成一张灰度噪声纹理，平铺后就是磨砂/亚克力的颗粒感。"""
+    cached = _NOISE_CACHE.get(size)
+    if cached is not None:
+        return cached
+    import random
+
+    pm = QtGui.QPixmap(size, size)
+    pm.fill(QtCore.Qt.transparent)
+    p = QtGui.QPainter(pm)
+    rng = random.Random(1337)
+    for y in range(size):
+        for x in range(size):
+            v = rng.randint(0, 255)
+            a = rng.randint(0, 26)
+            p.setPen(QtGui.QColor(v, v, v, a))
+            p.drawPoint(x, y)
+    p.end()
+    _NOISE_CACHE[size] = pm
+    return pm
+
+
+def glass_alpha(base: int) -> int:
+    """亚克力越强，底板越实一点，颗粒感才压得住背景。"""
+    return int(max(0, min(255, base + _ACRYLIC * 46)))

@@ -14,7 +14,7 @@ from __future__ import annotations
 import random
 from pathlib import Path
 
-from ..qtcompat import QtCore, QtGui, QtWidgets
+from ..qtcompat import QtCore, QtGui, QtWidgets, qcos, qsin
 
 
 def _blur_pixmap(pm: QtGui.QPixmap, radius: float) -> QtGui.QPixmap:
@@ -233,4 +233,117 @@ class BackgroundWidget(QtWidgets.QWidget):
         top.setColorAt(0.0, QtGui.QColor(3, 10, 20, 110))
         top.setColorAt(1.0, QtGui.QColor(3, 10, 20, 0))
         p.fillRect(QtCore.QRectF(0, 0, self.width(), self.height() * 0.4), QtGui.QBrush(top))
+        p.end()
+
+
+class BackgroundFX(QtWidgets.QWidget):
+    """铺在壁纸之上、界面之下的动效层。
+
+    只做两件便宜的事：几团缓慢游走的光晕 + 一批向上飘的星尘。
+    单独做成一个透明控件是为了**只重绘它自己**，不去连累上层那一堆面板，
+    否则每帧重画整个界面会明显吃 CPU。
+    """
+
+    FPS_MS = 40
+
+    def __init__(self, parent: QtWidgets.QWidget | None = None,
+                 enabled: bool = True, intensity: float = 1.0) -> None:
+        super().__init__(parent)
+        self.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
+        self.setAttribute(QtCore.Qt.WA_NoSystemBackground, True)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
+        self._enabled = bool(enabled)
+        self._intensity = max(0.0, min(1.5, float(intensity)))
+        self._t = 0.0
+        self._particles: list[tuple[float, float, float, float, float]] = []
+        self._built_for = (0, 0)
+        self._timer = QtCore.QTimer(self)
+        self._timer.setInterval(self.FPS_MS)
+        self._timer.timeout.connect(self._tick)
+        if self._enabled:
+            self._timer.start()
+
+    # ------------------------------------------------------------
+    def set_enabled(self, value: bool) -> None:
+        self._enabled = bool(value)
+        if self._enabled:
+            self._timer.start()
+        else:
+            self._timer.stop()
+        self.update()
+
+    def is_enabled(self) -> bool:
+        return self._enabled
+
+    def set_intensity(self, value: float) -> None:
+        self._intensity = max(0.0, min(1.5, float(value)))
+        self.update()
+
+    # ------------------------------------------------------------
+    def _build_particles(self, w: int, h: int) -> None:
+        rng = random.Random(90210)
+        n = max(28, int((w * h) / 26000))
+        self._particles = [
+            (rng.random(), rng.random(), rng.uniform(0.8, 2.6), rng.uniform(0.004, 0.020),
+             rng.uniform(0.35, 1.0))
+            for _ in range(n)
+        ]
+        self._built_for = (w, h)
+
+    def resizeEvent(self, event) -> None:  # noqa: N802
+        super().resizeEvent(event)
+        self._built_for = (0, 0)
+
+    def _tick(self) -> None:
+        if not self.isVisible():
+            return
+        self._t += self.FPS_MS / 1000.0
+        self.update()
+
+    # ------------------------------------------------------------
+    def paintEvent(self, event) -> None:  # noqa: N802
+        if not self._enabled or self._intensity <= 0.01:
+            return
+        w, h = self.width(), self.height()
+        if w <= 0 or h <= 0:
+            return
+        if self._built_for != (w, h):
+            self._build_particles(w, h)
+
+        p = QtGui.QPainter(self)
+        p.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        short = min(w, h)
+
+        # 1) 缓慢游走的光晕
+        p.setPen(QtCore.Qt.NoPen)
+        glows = [
+            (0.22, 0.28, 0.34, "#39C5BB", 30, 0.13),
+            (0.78, 0.62, 0.30, "#2E8BFF", 26, 0.09),
+            (0.48, 0.88, 0.26, "#FF6FA5", 16, 0.11),
+        ]
+        for i, (bx, by, br, color, alpha, speed) in enumerate(glows):
+            cx = (bx + 0.05 * qsin(self._t * speed * 3 + i * 2.1)) * w
+            cy = (by + 0.04 * qcos(self._t * speed * 2.3 + i * 1.7)) * h
+            radius = br * short
+            box = QtCore.QRectF(cx - radius, cy - radius, radius * 2, radius * 2)
+            grad = QtGui.QRadialGradient(QtCore.QPointF(cx, cy), radius)
+            inner = QtGui.QColor(color)
+            inner.setAlpha(int(alpha * self._intensity))
+            outer = QtGui.QColor(color)
+            outer.setAlpha(0)
+            grad.setColorAt(0.0, inner)
+            grad.setColorAt(1.0, outer)
+            p.setBrush(QtGui.QBrush(grad))
+            p.drawEllipse(box)
+
+        # 2) 缓缓上浮的星尘
+        for px, py, radius, speed, bright in self._particles:
+            y = (py - self._t * speed) % 1.0
+            x = (px + 0.012 * qsin(self._t * 0.5 + py * 9.0)) % 1.0
+            alpha = int(140 * bright * self._intensity * (0.35 + 0.65 * (1.0 - y)))
+            if alpha <= 3:
+                continue
+            p.setBrush(QtGui.QColor(210, 244, 255, min(255, alpha)))
+            p.drawEllipse(QtCore.QPointF(x * w, y * h), radius, radius)
+
         p.end()

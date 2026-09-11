@@ -3,10 +3,9 @@
 
 from __future__ import annotations
 
-import random
-
-from ..qtcompat import QtCore, QtGui, QtWidgets, Signal, qsin
+from ..qtcompat import QtCore, QtGui, QtWidgets, Signal
 from .. import icons, miku_art, theme
+from .miku_sprite import MikuSprite
 
 EXPANDED_W = 214
 COLLAPSED_W = 70
@@ -92,63 +91,6 @@ class NavItem(QtWidgets.QWidget):
         p.end()
 
 
-class MikuChibi(QtWidgets.QWidget):
-    """侧边栏底部的小未来，会眨眼，点一下会下葱雨。"""
-
-    clicked = Signal()
-
-    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
-        super().__init__(parent)
-        self.setFixedSize(64, 64)
-        self.setCursor(QtCore.Qt.PointingHandCursor)
-        self.setToolTip("ミクだよ♪  点一下试试～")
-        self._blink = 0.0
-        self._sway = 0.0
-        self._t = 0.0
-        self._hover = False
-
-        self._timer = QtCore.QTimer(self)
-        self._timer.timeout.connect(self._tick)
-        self._timer.start(60)
-        self._next_blink = random.randint(40, 110)
-
-    def _tick(self) -> None:
-        self._t += 1
-        self._sway = 0.6 * qsin(self._t * 0.06)
-        if self._blink > 0:
-            self._blink = max(0.0, self._blink - 0.18)
-        else:
-            self._next_blink -= 1
-            if self._next_blink <= 0:
-                self._blink = 1.0
-                self._next_blink = random.randint(50, 150)
-                self._sway = 0.0
-        self.update()
-
-    def enterEvent(self, event) -> None:  # noqa: N802
-        self._hover = True
-        self.update()
-
-    def leaveEvent(self, event) -> None:  # noqa: N802
-        self._hover = False
-        self.update()
-
-    def mouseReleaseEvent(self, event) -> None:  # noqa: N802
-        if event.button() == QtCore.Qt.LeftButton and self.rect().contains(event.pos()):
-            self.clicked.emit()
-
-    def paintEvent(self, event) -> None:  # noqa: N802
-        p = QtGui.QPainter(self)
-        p.setRenderHint(QtGui.QPainter.Antialiasing, True)
-        if self._hover:
-            p.setPen(QtCore.Qt.NoPen)
-            p.setBrush(QtGui.QColor(57, 197, 187, 46))
-            p.drawEllipse(self.rect().adjusted(2, 2, -2, -2))
-        miku_art.draw_chibi(p, QtCore.QRectF(4, 2, self.width() - 8, self.height() - 4),
-                            blink=self._blink, sway=self._sway)
-        p.end()
-
-
 class Sidebar(QtWidgets.QWidget):
     pageChanged = Signal(str)
     collapseToggled = Signal(bool)
@@ -220,7 +162,7 @@ class Sidebar(QtWidgets.QWidget):
         row.addStretch(1)
         corner_lay.addLayout(row)
 
-        self.chibi = MikuChibi(self.corner)
+        self.chibi = MikuSprite(self.corner, size=70, animated=False)
         self.chibi.clicked.connect(self.mikuClicked)
         crow = QtWidgets.QHBoxLayout()
         crow.setContentsMargins(0, 0, 0, 0)

@@ -1,6 +1,6 @@
 # ComfyUI_TagSelect
 
-![version](https://img.shields.io/badge/version-v0.11-39C5BB)
+![version](https://img.shields.io/badge/version-v0.12-39C5BB)
 ![build](https://github.com/Luoury/ComfyUI_TagSelect/actions/workflows/build-windows.yml/badge.svg)
 ![python](https://img.shields.io/badge/python-3.9%2B-2E8BFF)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -12,6 +12,8 @@
 最后按「**复制全部**」直接粘进 ComfyUI / NovelAI / Stable Diffusion WebUI / Illustrious / Pony。
 
 支持 **中文搜英文**：输入「长发」就能找到 `long_hair`。
+界面是初音未来主题：随程序附带的 MIKU 壁纸 + 可调**亚克力磨砂质感** + **缓慢流动的背景光晕**，
+左下角还有一只会**挤压回弹**的 MIKU 立绘。
 
 ## ⬇️ 下载
 
@@ -68,6 +70,10 @@
 | 常驻预设 | **81 个内置预设 / 8 个分组**（NovelAI「V3/V4」、SD1.5、SDXL、Pony V6 XL、Illustrious / NoobAI 的官方或社区标准质量串与负面串） |
 | 点击加入 / 再次点击移除 | ✅ 被选中的 tag 显示为**蓝色渐变** |
 | 复制全部 | ✅ 右上角「复制全部」（`Ctrl+Shift+C`），5 种分隔格式可选 |
+| 分类可展开 | 分类胶囊收起时单行横滚，点右侧 `⌄` 展开成多行，一屏看全 23 个分类 |
+| MIKU 立绘 | 侧边栏与「关于」页共用同一套立绘，点击有**小黄鸭式挤压回弹**，下葱雨时在两张图之间切换 |
+| 背景动效 | 缓慢游走的光晕 + 上浮星尘，可在设置里关闭或调强度 |
+| 亚克力质感 | 面板带磨砂颗粒，滑块可调（0 = 清爽玻璃，100 = 明显亚克力） |
 
 ---
 
@@ -148,7 +154,7 @@ Linux / macOS：
 每次构建会依次执行：
 
 1. 检查 `assets/data/` 三个数据文件是否齐全
-2. 跑 `tools/selftest.py`（离屏，70 项断言）
+2. 跑 `tools/selftest.py`（离屏，99 项断言）
 3. `pyinstaller ComfyUI_TagSelect.spec` 打包单文件 exe
 4. 跑 `tools/smoke_test.py` —— 启动 exe 等 14 秒，确认不是秒退
 5. 生成 `SHA256SUMS.txt`，把 exe 与校验和上传到对应 Release
@@ -269,18 +275,14 @@ python tools/build_data.py --input-dir /path/to/data --output-dir assets/data
 
 ## 壁纸
 
-**本仓库不附带任何壁纸图片。**
-
-开发时使用的几张初音未来插画来自 pixiv，版权归各画师所有，不适合在公开仓库里再分发，
-因此 `assets/wallpapers/` 目录是空的（只保留一份 `README.md`）。
-
-没有壁纸时，程序会用 **QPainter 现画一张初音配色的星空渐变背景**（代码生成的，
-没有版权问题）—— 上面截图里的深蓝星空就是它。功能完全不受影响。
+程序**自带一张默认壁纸**（`assets/wallpapers/miku_meteor.jpg`，夜空流星），
+第一次启动就会用它；同时程序也会画一张初音配色的星空渐变作为兜底背景。
 
 ### 换成自己的图片
 
 最简单：打开 **设置 → 外观 → 「添加图片…」**，选一张图，程序会把它复制到用户壁纸目录
 并立刻应用。想批量放图，也可以点「打开壁纸文件夹」把图片丢进去，重启程序即可识别。
+不想用壁纸就点「用默认背景」。
 
 用户壁纸目录（**持久保存，重启 exe 不会丢**）：
 
@@ -295,20 +297,30 @@ python tools/build_data.py --input-dir /path/to/data --output-dir assets/data
 壁纸用 `KeepAspectRatioByExpanding` + 居中裁剪绘制，**任何窗口比例下都铺满、不会留白**；
 「背景压暗」「背景模糊」两个滑块对默认星空背景同样生效。
 
-> ⚠️ **不要**把图片放进 `assets/wallpapers/` 给打包好的 exe 用 —— 单文件 exe 的
-> `assets/` 是每次启动都会重建的临时解包目录，放进去下次启动就没了。
-> 那个目录只在「源码运行 / 自己重新打包」时有意义（`ComfyUI_TagSelect.spec`
-> 会把整个 `assets/` 打进去，作为内置壁纸）。
+> ⚠️ **不要**把图片放进 exe 旁边的 `assets/wallpapers/` —— 单文件 exe 的 `assets/` 是
+> 每次启动都会重建的临时解包目录，放进去下次启动就没了。那个目录只在
+> 「源码运行 / 自己重新打包」时有意义（spec 会把整个 `assets/` 打进去成为内置壁纸）。
+
+> 附带的默认壁纸版权归原作者所有，仅供个人学习自用，请勿商用。
 
 ---
 
 ## 彩蛋
 
-- 点左下角那只**小未来**（她会眨眼），会下一场**大葱雨** 🌱
-- 搜索框输入 `39` 回车 —— 同样的效果。`39` 是ミク的谐音，也是她最经典的应援数字
-- Logo、《关于》页的小未来会跟着节奏轻轻摇摆
+**左下角那只 MIKU**（侧边栏收起时也在）：
+
+- 悬停会亮起一圈青光；**点击有「小黄鸭」式的挤压回弹** —— 按下去纵向压扁、横向撑开，
+  松手后用 `OutElastic` 弹回来并轻微过冲；
+- 点击同时会下一场**大葱雨** 🌱，期间立绘在「咬着大葱」和「眯眼大叫」两张图之间来回切换，
+  雨停了自动回到初始表情；
+- 「关于」页那只 MIKU 是同一套，点它也有一样的效果。
+
+其它：
+
+- 搜索框输入 `39` 回车 —— 同样的葱雨效果。`39` 是ミク的谐音，也是她最经典的应援数字
 - 鼠标悬停标签可以看到投稿量、中文名与 R18 标记
-- 壁纸有 **5 张**，设置页可以随时切换（全部会自动铺满窗口）
+- 亚克力质感滑块拉满，面板会有明显的磨砂颗粒感
+- 背景动效可以在设置里关掉（省电 / 觉得晃眼时）
 
 ---
 
@@ -325,24 +337,27 @@ ComfyUI_TagSelect/
 │   ├── data_store.py           # 标签数据库 + 全库搜索索引（后台线程加载）
 │   ├── user_data.py            # 设置 / 自定义标签 / 预设 的读写
 │   ├── icons.py                # QPainter 手绘线性图标
-│   ├── miku_art.py             # Q 版未来、大葱、Logo 的矢量绘制
+│   ├── miku_art.py             # 大葱、Logo 的矢量绘制
 │   ├── main_window.py          # 主窗口：搜索栏 + 已选框 + 分类标签网格
 │   └── widgets/
 │       ├── background.py       # 壁纸全覆盖绘制
 │       ├── tag_canvas.py       # 虚拟化标签画布（可承载上万标签）
 │       ├── chip_paint.py       # 胶囊统一绘制（选中=蓝色渐变）
 │       ├── common.py           # 玻璃卡片、胶囊按钮、开关、Toast
-│       ├── sidebar.py          # 左侧导航 + Q 版未来彩蛋
+│       ├── miku_sprite.py      # MIKU 立绘：挤压回弹动效 + 葱雨切图
+│       ├── flow_layout.py      # 分类胶囊的单行 / 换行布局
+│       ├── sidebar.py          # 左侧导航 + MIKU 彩蛋
 │       ├── pages.py            # 预设 / 自定义标签 / 设置 / 关于
 │       └── leek_rain.py        # 大葱雨彩蛋
 ├── assets/
-│   ├── wallpapers/             # 空的（放你自己的图，见「壁纸」一节）
+│   ├── miku/                   # 3 张 MIKU 立绘（idle / leek / yell）
+│   ├── wallpapers/             # 默认壁纸 + 放自己的图（见「壁纸」一节）
 │   ├── icons/                  # 应用图标 (.ico / .png)
 │   └── data/                   # 标签数据与预设
 ├── docs/                       # 文档截图
 ├── tools/
 │   ├── build_data.py           # 标签数据生成流水线
-│   ├── selftest.py             # 离屏功能自测（70 项断言）
+│   ├── selftest.py             # 离屏功能自测（99 项断言）
 │   ├── smoke_test.py           # 打包产物冒烟测试（启动后检查是否秒退）
 │   ├── version.py              # 输出 __version__，CI 用来推导发布标签
 │   └── screenshot.py           # 开发用离屏截图校对工具
@@ -377,9 +392,9 @@ A：重新生成数据前，改 `tools/build_data.py` 里对应的分类词表�
 **Q：想要更多标签？**
 A：调大 `tools/build_data.py` 里的 `CORE_CAPS`（每个分类的核心标签上限），重新生成即可。
 
-**Q：界面背景是纯色 / 星空，没有插画？**
-A：这是正常的 —— 仓库不附带壁纸，默认用程序生成的星空背景。
-在「设置 → 外观」点「添加图片…」换成自己的图即可，详见 [壁纸](#壁纸)。
+**Q：界面背景是星空，不是 MIKU 壁纸？**
+A：说明壁纸文件丢了或 key 失效了。去「设置 → 外观」重新点一下「星空流星 · 默认」，
+或点「添加图片…」换成自己的图，详见 [壁纸](#壁纸)。
 
 **Q：我把图片放到 exe 旁边的 `assets\wallpapers\` 里，程序却认不出来？**
 A：单文件 exe 的 `assets\` 是**每次启动都会重建的临时解包目录**（PyInstaller 的
@@ -390,7 +405,7 @@ A：单文件 exe 的 `assets\` 是**每次启动都会重建的临时解包目�
 > v0.11 已修复：壁纸改成用 `user:xxx.jpg` 这样的稳定标识记录。
 
 **Q：怎么确认功能都正常？**
-A：跑 `python tools/selftest.py`（离屏，不需要显示器），会执行 70 项断言并打印结果。
+A：跑 `python tools/selftest.py`（离屏，不需要显示器），会执行 99 项断言并打印结果。
 
 ---
 

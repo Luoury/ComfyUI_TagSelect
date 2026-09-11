@@ -10,7 +10,7 @@ import uuid
 from typing import Any
 
 from .qtcompat import QtCore, Signal
-from .resources import DATA_DIR, user_data_dir
+from .resources import DATA_DIR, DEFAULT_WALLPAPER_KEY, user_data_dir
 
 SETTINGS_FILE = "settings.json"
 CUSTOM_FILE = "custom_tags.json"
@@ -18,17 +18,20 @@ PRESETS_FILE = "user_presets.json"
 BUILTIN_PRESETS = DATA_DIR / "presets.json"
 
 DEFAULT_SETTINGS: dict[str, Any] = {
-    "wallpaper": "",            # 空 = 使用默认壁纸
+    "wallpaper": DEFAULT_WALLPAPER_KEY,   # 默认用打包自带的 MIKU 壁纸；空串 = 程序生成背景
     "scrim": 0.52,              # 背景压暗程度 0~0.85
     "blur": 0.0,                # 背景模糊半径 px
     "r18": False,               # R18 开关，默认关闭
     "copy_format": "comma",     # comma | comma_space | space | newline | brace
     "font_scale": 1.0,
-    "sidebar_collapsed": False,
+    "sidebar_collapsed": True,   # 初始界面默认收缩
     "last_page": "library",
     "show_counts": True,
     "confirm_clear": True,
     "chip_mode": "both",        # both | en | zh
+    "acrylic": 0.55,            # 亚克力质感 0~1
+    "bg_motion": True,          # 背景动效开关
+    "bg_motion_intensity": 1.0,  # 动效强度 0~1.5
     "window": None,             # [x, y, w, h]
 }
 

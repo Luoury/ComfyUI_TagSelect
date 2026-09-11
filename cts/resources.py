@@ -60,8 +60,22 @@ ASSETS_DIR = (Path(os.environ["TAGSELECT_ASSETS_DIR"])
               if os.environ.get("TAGSELECT_ASSETS_DIR") else BASE_DIR / "assets")
 DATA_DIR = ASSETS_DIR / "data"
 ICON_DIR = ASSETS_DIR / "icons"
+MIKU_DIR = ASSETS_DIR / "miku"
 # 兼容旧名字：打包自带的壁纸目录（只读）
 WALLPAPER_DIR = ASSETS_DIR / "wallpapers"
+
+# MIKU 立绘（已做成圆角贴纸）
+MIKU_SPRITES = {
+    "idle": "miku_idle.png",   # 初始状态
+    "leek": "miku_leek.png",   # 咬着大葱
+    "yell": "miku_yell.png",   # 眯眼大叫
+}
+DEFAULT_WALLPAPER_KEY = "builtin:miku_meteor.jpg"
+
+
+def miku_sprite(state: str) -> Path | None:
+    path = MIKU_DIR / MIKU_SPRITES.get(state, MIKU_SPRITES["idle"])
+    return path if path.exists() else None
 
 
 def user_data_dir() -> Path:

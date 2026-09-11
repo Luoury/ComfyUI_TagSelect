@@ -28,20 +28,43 @@ class GlassCard(QtWidgets.QFrame):
         p = QtGui.QPainter(self)
         p.setRenderHint(QtGui.QPainter.Antialiasing, True)
         r = QtCore.QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
-        alpha = self._alpha if self._alpha is not None else (214 if self._strong else 168)
+        acr = theme.acrylic()
+        base = self._alpha if self._alpha is not None else (214 if self._strong else 168)
+
+        path = QtGui.QPainterPath()
+        path.addRoundedRect(r, self._radius, self._radius)
+
         p.setPen(QtCore.Qt.NoPen)
-        p.setBrush(QtGui.QColor(7, 16, 30, alpha))
-        p.drawRoundedRect(r, self._radius, self._radius)
+        p.setBrush(QtGui.QColor(7, 16, 30, theme.glass_alpha(base)))
+        p.drawPath(path)
+
+        # 亚克力颗粒：平铺噪声纹理，强度跟着设置走
+        if acr > 0.02:
+            p.save()
+            p.setClipPath(path)
+            p.setOpacity(min(1.0, acr * 0.85))
+            # 注意：不要写成 QBrush(pixmap, Qt.TexturePattern) ——
+            # 这个重载在部分 PyQt5 构建上会拿到无效 brush 直接把进程 assert 掉，
+            # 只传 pixmap 时默认就是 TexturePattern。
+            p.setBrush(QtGui.QBrush(theme.noise_pixmap()))
+            p.setPen(QtCore.Qt.NoPen)
+            p.drawPath(path)
+            p.restore()
+
         if self._highlight:
             grad = QtGui.QLinearGradient(r.topLeft(), r.bottomLeft())
-            grad.setColorAt(0.0, QtGui.QColor(255, 255, 255, 22))
-            grad.setColorAt(1.0, QtGui.QColor(255, 255, 255, 0))
+            grad.setColorAt(0.0, QtGui.QColor(255, 255, 255, int(18 + 26 * acr)))
+            grad.setColorAt(0.45, QtGui.QColor(255, 255, 255, 0))
+            grad.setColorAt(1.0, QtGui.QColor(255, 255, 255, int(6 * acr)))
             p.setBrush(QtGui.QBrush(grad))
-            p.drawRoundedRect(r, self._radius, self._radius)
+            p.drawPath(path)
+
         if self._border:
             p.setBrush(QtCore.Qt.NoBrush)
-            p.setPen(QtGui.QPen(QtGui.QColor(theme.GLASS_BORDER), 1.0))
-            p.drawRoundedRect(r, self._radius, self._radius)
+            edge = QtGui.QColor(theme.GLASS_BORDER)
+            edge.setAlpha(min(255, int(edge.alpha() + 60 * acr)))
+            p.setPen(QtGui.QPen(edge, 1.0))
+            p.drawPath(path)
         p.end()
 
 

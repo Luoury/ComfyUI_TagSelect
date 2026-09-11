@@ -206,6 +206,121 @@ def main() -> int:
     win.toggle_tag(miku)
     app.processEvents()
 
+    # ---------------- 用 × 移除后网格必须同步（回归）----------------
+    print("\n[× 移除同步]")
+    win.selected.clear()
+    app.processEvents()
+    win.toggle_tag(db.lookup("long_hair"))
+    win.toggle_tag(db.lookup("smile"))
+    app.processEvents()
+    check("网格里两个都变蓝",
+          {"long_hair", "smile"} <= set(win.library.grid.canvas._selected),
+          str(sorted(win.library.grid.canvas._selected)))
+    removed = db.lookup("long_hair")
+    win.selected.remove(removed)          # 等价于点标签上的 ×
+    app.processEvents()
+    check("× 移除后 _selected 已同步", "long_hair" not in win._selected,
+          str(sorted(win._selected)))
+    check("× 移除后网格里的蓝色也消失",
+          "long_hair" not in win.library.grid.canvas._selected,
+          str(sorted(win.library.grid.canvas._selected)))
+    check("另一个标签仍然保持选中", "smile" in win._selected)
+    win.selected.clear()
+    app.processEvents()
+
+    # ---------------- MIKU 立绘 ----------------
+    print("\n[MIKU 立绘]")
+    from cts.widgets.miku_sprite import MikuSprite, _sprite_pixmap
+    for st in ("idle", "leek", "yell"):
+        pm = _sprite_pixmap(st)
+        check(f"立绘 {st} 已加载", not pm.isNull() and pm.width() == 512,
+              f"{pm.width()}x{pm.height()}")
+    sprite = MikuSprite(None, size=80)
+    check("初始状态为 idle", sprite.state() == "idle")
+    sprite.bounce()
+    check("点击后开始挤压", sprite.squash < 1.0, f"squash={sprite.squash:.2f}")
+    sprite.play_rain(1200)
+    app.processEvents()
+    sprite._rain_tick()
+    check("葱雨期间切到第二张图", sprite.state() == "leek", sprite.state())
+    sprite._rain_tick()
+    check("葱雨期间继续切换", sprite.state() == "yell", sprite.state())
+    sprite._rain_left = 1
+    sprite._rain_tick()
+    check("葱雨结束回到 idle", sprite.state() == "idle", sprite.state())
+
+    # ---------------- 分类展开 / 收起 ----------------
+    print("\n[分类展开]")
+    pills = win.library.pills
+    pills.set_expanded(False)
+    app.processEvents()
+    collapsed_h = pills.height()
+    check("收起时是单行", not pills.is_expanded() and pills._lay.wrap() is False,
+          f"h={collapsed_h}")
+    pills.set_expanded(True)
+    app.processEvents()
+    QtCore.QTimer.singleShot(0, lambda: None)
+    app.processEvents()
+    check("展开后换成换行布局", pills.is_expanded() and pills._lay.wrap() is True)
+    check("展开后高度变大", pills.height() >= collapsed_h,
+          f"{collapsed_h} -> {pills.height()}")
+    # 23 个分类 + 「热门」，R18 关闭时不含 r18
+    expect_pills = len(db.categories) + 1 - (0 if win._r18 else 1)
+    check("展开后能容纳所有分类", len(pills._pills) == expect_pills,
+          f"{len(pills._pills)} 个胶囊，期望 {expect_pills}")
+    pills.set_expanded(False)
+    app.processEvents()
+    check("可以再收起", not pills.is_expanded() and pills.height() == collapsed_h)
+
+    # ---------------- 亚克力 / 背景动效 ----------------
+    print("\n[亚克力与动效]")
+    from cts.widgets.common import GlassCard
+    card = GlassCard(None, alpha=120)
+    card.resize(200, 120)
+    for value in (0.0, 0.55, 1.0):
+        theme.set_acrylic(value)
+        shot = QtGui.QPixmap(card.size())
+        shot.fill(QtCore.Qt.transparent)
+        card.render(shot)
+        img = shot.toImage()
+        colors = {img.pixelColor(x, y).name() for x in range(0, 200, 13)
+                  for y in range(0, 120, 11)}
+        check(f"亚克力 {value:.2f} 能正常渲染", len(colors) > 1, f"{len(colors)} 种颜色")
+    theme.set_acrylic(0.0)
+    flat = QtGui.QPixmap(card.size()); flat.fill(QtCore.Qt.transparent); card.render(flat)
+    theme.set_acrylic(1.0)
+    rough = QtGui.QPixmap(card.size()); rough.fill(QtCore.Qt.transparent); card.render(rough)
+    check("亚克力强度会改变画面（颗粒感）",
+          flat.toImage() != rough.toImage())
+    theme.set_acrylic(0.55)
+
+    from cts.widgets.background import BackgroundFX
+    fx = BackgroundFX(None, enabled=True, intensity=1.0)
+    fx.resize(640, 400)
+    fx._build_particles(640, 400)
+    check("动效层生成了粒子", len(fx._particles) > 20, f"{len(fx._particles)} 个")
+    fx.set_enabled(False)
+    check("动效可以关闭", fx.is_enabled() is False)
+    fx.set_enabled(True)
+    fx.show()
+    app.processEvents()
+    fx._tick()
+    check("动效层能正常绘制", True)
+
+    # ---------------- 侧边栏默认收缩 ----------------
+    print("\n[初始状态]")
+    from cts.user_data import DEFAULT_SETTINGS
+    check("侧边栏默认收缩", DEFAULT_SETTINGS["sidebar_collapsed"] is True)
+    check("默认壁纸是打包自带的 MIKU 图",
+          DEFAULT_SETTINGS["wallpaper"] == resources.DEFAULT_WALLPAPER_KEY,
+          DEFAULT_SETTINGS["wallpaper"])
+    check("打包自带的默认壁纸真实存在",
+          resources.resolve_wallpaper(resources.DEFAULT_WALLPAPER_KEY) is not None,
+          str(resources.resolve_wallpaper(resources.DEFAULT_WALLPAPER_KEY)))
+    check("亚克力默认开启", 0.0 < DEFAULT_SETTINGS["acrylic"] <= 1.0,
+          str(DEFAULT_SETTINGS["acrylic"]))
+    check("背景动效默认开启", DEFAULT_SETTINGS["bg_motion"] is True)
+
     # ---------------- 复制全部 ----------------
     print("\n[复制全部]")
     win.copy_all()

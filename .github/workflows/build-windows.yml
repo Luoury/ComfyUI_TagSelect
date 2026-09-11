@@ -52,7 +52,7 @@ jobs:
             echo "OK  $f  $(du -h "$f" | cut -f1)"
           done
 
-      - name: 源码自测（离屏，70 项断言）
+      - name: 源码自测（离屏，99 项断言）
         timeout-minutes: 10
         env:
           QT_QPA_PLATFORM: offscreen

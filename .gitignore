@@ -25,12 +25,13 @@ userdata/
 .DS_Store
 
 # ---------------------------------------------------------------------------
-# 壁纸不入库
+# 壁纸
 #
-# assets/wallpapers/ 里默认使用的插画来自 pixiv，版权归各画师所有，
-# 公开仓库不再分发。程序在找不到壁纸时会自动使用初音配色的渐变背景。
-# 想换回插画主题：把任意图片（jpg/png/webp/bmp）放进 assets/wallpapers/ 即可，
-# 程序会自动识别并在「设置 → 外观」里列出。
+# `miku_meteor.jpg` 是随程序分发的默认壁纸；除此之外 assets/wallpapers/ 里的
+# 图片都不入库（开发时用到的其它 pixiv 插画版权归各画师所有）。
+# 用户自己的壁纸请放在用户数据目录（设置 → 外观 → 打开壁纸文件夹），
+# 不要去改 assets/wallpapers/ —— 单文件 exe 下那是每次启动都会重建的临时目录。
 # ---------------------------------------------------------------------------
 assets/wallpapers/*
 !assets/wallpapers/README.md
+!assets/wallpapers/miku_meteor.jpg

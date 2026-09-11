@@ -19,6 +19,11 @@ import tempfile
 import time
 from pathlib import Path
 
+
+from _utf8 import force_utf8
+
+force_utf8()
+
 ROOT = Path(__file__).resolve().parent.parent
 WAIT_SECONDS = float(os.environ.get("SMOKE_WAIT", "14"))
 

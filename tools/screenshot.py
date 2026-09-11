@@ -21,6 +21,11 @@ from cts.data_store import TagDatabase, Tag  # noqa: E402
 from cts.main_window import MainWindow  # noqa: E402
 from cts.user_data import UserData  # noqa: E402
 
+
+from _utf8 import force_utf8
+
+force_utf8()
+
 OUT = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT / ".shots")
 OUT.mkdir(parents=True, exist_ok=True)
 

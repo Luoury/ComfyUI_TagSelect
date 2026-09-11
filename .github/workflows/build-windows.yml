@@ -23,6 +23,10 @@ jobs:
     name: 打包 ComfyUI_TagSelect.exe
     runs-on: windows-latest
     timeout-minutes: 30
+    env:
+      # Windows 控制台默认 cp1252，而脚本里有中文输出，这里强制 UTF-8
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: 'utf-8'
 
     steps:
       - name: 检出代码

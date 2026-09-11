@@ -27,6 +27,11 @@ from collections import Counter, defaultdict
 from datetime import date
 from pathlib import Path
 
+
+from _utf8 import force_utf8
+
+force_utf8()
+
 ROOT = Path(__file__).resolve().parent.parent
 
 # danbooru 原始分类
